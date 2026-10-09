@@ -7,7 +7,7 @@ export interface TextToSpeechProps {
   plugins: PluginModel[];
   htmlBook: HtmlBook;
   isReading: boolean;
-  isAuthed: boolean;
+
   readerMode: string;
   speechStartText: string;
   isSpeechAutoStart: boolean;
@@ -27,13 +27,4 @@ export interface TextToSpeechState {
   languageList: string[];
   voiceList: any;
   multiRoleEnabled: boolean;
-  multiRoleVoiceType: string;
-  multiRoleNarratorVoice: string;
-  multiRoleMaleVoice: string;
-  multiRoleFemaleVoice: string;
-  multiRoleNarratorEngine: string;
-  multiRoleMaleEngine: string;
-  multiRoleFemaleEngine: string;
-  multiRoleChildVoice: string;
-  multiRoleChildEngine: string;
 }

@@ -1,4 +1,5 @@
 {
+  "Please reconfigure this data source to store its credentials locally": "Please reconfigure this data source to store its credentials locally",
   "Books": "Books",
   "Recent": "Recents",
   "Bookmarks": "Bookmarks",
@@ -1381,5 +1382,25 @@
   "Failed to recognize title": "Failed to recognize title",
   "Show total page number (Experimental)": "Show total page number (Experimental)",
   "This version of Koodo Reader is too old. Please go to Settings - About - Check for Updates to update Koodo Reader to the latest version and try again.": "This version of Koodo Reader is too old. Please go to Settings - About - Check for Updates to update Koodo Reader to the latest version and try again.",
-  "Background opacity": "Background opacity"
+  "Background opacity": "Background opacity",
+  "TODO: Cloud drive authorization is not available yet": "TODO: Cloud drive authorization is not available yet",
+  "TODO: Multi-role speech awaits self-hosted AI support": "TODO: Multi-role speech awaits self-hosted AI support",
+  "TODO: Inline word definitions are not available yet": "TODO: Inline word definitions are not available yet",
+  "TODO: Online metadata lookup is not available yet": "TODO: Online metadata lookup is not available yet",
+  "Please configure a title analysis model in Settings - AI": "Please configure a title analysis model in Settings - AI",
+  "Please configure an AI translation model in Settings - AI": "Please configure an AI translation model in Settings - AI",
+  "Please select a text translation service in Settings - AI": "Please select a text translation service in Settings - AI",
+  "The selected service returned no text": "The selected service returned no text",
+  "This translation service cannot return text": "This translation service cannot return text",
+  "The selected translation service does not support this language": "The selected translation service does not support this language",
+  "AI title analysis model": "AI title analysis model",
+  "Full text translation service": "Full text translation service",
+  "Use selected translation service": "Use selected translation service",
+  "Please select a replacement service": "Please select a replacement service",
+  "If this device has the correct library, reset its sync record, remove the KoodoReader/config folder from your storage, and sync again.": "If this device has the correct library, reset its sync record, remove the KoodoReader/config folder from your storage, and sync again.",
+  "A free fork of Koodo Reader. No account or subscription required.": "A free fork of Koodo Reader. No account or subscription required.",
+  "Download releases manually": "Download releases manually",
+  "Upstream project": "Upstream project",
+  "This data source requires a browser extension. Please use the desktop app for now.": "This data source requires a browser extension. Please use the desktop app for now.",
+  "Upstream plugin documentation": "Upstream plugin documentation"
 }

@@ -1,27 +1,5 @@
 import { connect } from "react-redux";
-import {
-  handleActionDialog,
-  handleReadingState,
-  handleReadingBook,
-  handleHtmlBook,
-  handleRenderBookFunc,
-  handleFetchBooks,
-  handleMenuMode,
-  handleNoteKey,
-  handleOpenMenu,
-  handleCurrentChapter,
-  handleCurrentChapterIndex,
-  handleFetchNotes,
-  handleFetchBookmarks,
-  handlePercentage,
-  handleFetchPercentage,
-  handleFetchPlugins,
-  handleReaderMode,
-  handleFetchAuthed,
-  handleScale,
-  handleBackgroundColor,
-  handleParagraphMode,
-} from "../../store/actions";
+import { handleActionDialog, handleReadingState, handleReadingBook, handleHtmlBook, handleRenderBookFunc, handleFetchBooks, handleMenuMode, handleNoteKey, handleOpenMenu, handleCurrentChapter, handleCurrentChapterIndex, handleFetchNotes, handleFetchBookmarks, handlePercentage, handleFetchPercentage, handleFetchPlugins, handleReaderMode, handleScale, handleBackgroundColor, handleParagraphMode } from "../../store/actions";
 import Viewer from "./component";
 import { stateType } from "../../store";
 import { withTranslation } from "react-i18next";
@@ -36,7 +14,7 @@ const mapStateToProps = (state: stateType) => {
     isSettingLocked: state.reader.isSettingLocked,
     isDockedRight: state.reader.isDockedRight,
     isOpenMenu: state.viewArea.isOpenMenu,
-    isAuthed: state.manager.isAuthed,
+
     readerMode: state.reader.readerMode,
     defaultSyncOption: state.backupPage.defaultSyncOption,
     menuMode: state.viewArea.menuMode,
@@ -70,7 +48,7 @@ const actionCreator = {
   handleMenuMode,
   handleFetchPlugins,
   handleReaderMode,
-  handleFetchAuthed,
+
   handleScale,
   handleBackgroundColor,
   handleParagraphMode,

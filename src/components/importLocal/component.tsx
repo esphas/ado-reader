@@ -27,7 +27,7 @@ import {
 } from "../../utils/common";
 import DatabaseService from "../../utils/storage/databaseService";
 import { BookHelper } from "../../assets/lib/kookit.min";
-import { analyzeBookTitle } from "../../utils/request/reader";
+import { analyzeBookTitle } from "../../utils/request/selfHosted";
 
 // Convert supportedFormats to react-dropzone v14+ accept format
 // Key is MIME type, value is array of file extensions
@@ -114,9 +114,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           this.props.t(
             "Do you want to download and import the book from this URL?"
           ) +
-            "<br><span style='word-break:break-all'>" +
-            escapeHtml(rawUrl) +
-            "</span>",
+          "<br><span style='word-break:break-all'>" +
+          escapeHtml(rawUrl) +
+          "</span>",
           "Confirm",
           "Cancel"
         );
@@ -207,7 +207,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         if (ConfigService.getReaderConfig("isPreventAdd") === "yes") {
           //ignore
         } else if (
-          this.props.isAuthed &&
+
           ConfigService.getItem("defaultSyncOption")
         ) {
           await BookUtil.addBook(
@@ -238,7 +238,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       } else {
         if (
           !isImportPath ||
-          (this.props.isAuthed && ConfigService.getItem("defaultSyncOption"))
+          ( ConfigService.getItem("defaultSyncOption"))
         ) {
           await BookUtil.addBook(
             book.key,
@@ -265,8 +265,8 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           }
           toast.success(
             this.props.t("Addition successful") +
-              ": " +
-              book.name.substring(0, 50),
+            ": " +
+            book.name.substring(0, 50),
             {
               id: "add-book",
             }
@@ -302,16 +302,15 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
   analyzeBookMetadata = async (book: BookModel, bookName: string) => {
     if (
       ConfigService.getReaderConfig("isAIAnalyzeTitle") !== "yes" ||
-      !this.props.isAuthed ||
       book.name !== bookName
     ) {
       return;
     }
     try {
       const response = await analyzeBookTitle(book.name);
-      if (response && response.code === 200 && response.data?.name) {
-        book.name = response.data.name;
-        book.author = response.data.author || book.author;
+      if (response?.name) {
+        book.name = response.name;
+        book.author = response.author || book.author;
       }
     } catch (error) {
       console.error(error, bookName);
@@ -780,8 +779,8 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     if (!looksLikeHtml) {
       throw new Error(
         this.props.t("Unsupported file format") +
-          ": " +
-          (contentType || "unknown")
+        ": " +
+        (contentType || "unknown")
       );
     }
 
@@ -872,9 +871,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       typeof externalUrl === "string"
         ? externalUrl
         : await vexPromptAsync(
-            this.props.t("Enter book download URL or article URL"),
-            "https://"
-          );
+          this.props.t("Enter book download URL or article URL"),
+          "https://"
+        );
     if (!url || typeof url !== "string") return;
     const trimmedUrl = url.trim();
     if (
@@ -935,9 +934,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         } else {
           toast.loading(
             this.props.t("Downloading") +
-              ": " +
-              (received / 1024).toFixed(1) +
-              " KB",
+            ": " +
+            (received / 1024).toFixed(1) +
+            " KB",
             { id: toastId, position: "bottom-center" }
           );
         }
@@ -1005,11 +1004,11 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                     style={
                       this.state.width < 950
                         ? {
-                            bottom: "calc(100% + 5px)",
-                            top: "unset",
-                            right: "unset",
-                            left: "-110px",
-                          }
+                          bottom: "calc(100% + 5px)",
+                          top: "unset",
+                          right: "unset",
+                          left: "-110px",
+                        }
                         : {}
                     }
                   >
@@ -1239,7 +1238,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                   }
                   if (
                     ConfigService.getReaderConfig("isDisableAutoSync") !==
-                      "yes" &&
+                    "yes" &&
                     ConfigService.getItem("defaultSyncOption")
                   ) {
                     await this.props.cloudSyncFunc();

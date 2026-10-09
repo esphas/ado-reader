@@ -90,9 +90,7 @@ class SettingSwitch extends React.Component<
       speedReadingSpeed:
         ConfigService.getReaderConfig("speedReadingSpeed") || "300",
       isMergeWord: ConfigService.getReaderConfig("isMergeWord") === "yes",
-      isWordDefinition: ConfigService.getAllListConfig(
-        "wordDefinitionBooks"
-      ).includes(props.currentBook?.key),
+      isWordDefinition: false,
       isSeperateStyle: ConfigService.getAllListConfig(
         "seperateStyleBooks"
       ).includes(props.currentBook?.key),
@@ -108,9 +106,7 @@ class SettingSwitch extends React.Component<
   async UNSAFE_componentWillReceiveProps(nextProps: SettingSwitchProps) {
     if (nextProps.currentBook?.key !== this.props.currentBook?.key) {
       this.setState({
-        isWordDefinition: ConfigService.getAllListConfig(
-          "wordDefinitionBooks"
-        ).includes(nextProps.currentBook?.key),
+        isWordDefinition: false,
         isSeperateStyle: ConfigService.getAllListConfig(
           "seperateStyleBooks"
         ).includes(nextProps.currentBook?.key),
@@ -233,13 +229,13 @@ class SettingSwitch extends React.Component<
               style={
                 !this.state.isCustomBookCSS
                   ? {
-                      transform: "translateX(0px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(0px)",
+                    transition: "transform 0.5s ease",
+                  }
                   : {
-                      transform: "translateX(20px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(20px)",
+                    transition: "transform 0.5s ease",
+                  }
               }
             ></span>
           </span>
@@ -307,13 +303,13 @@ class SettingSwitch extends React.Component<
               style={
                 !this.state.isSeperateStyle
                   ? {
-                      transform: "translateX(0px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(0px)",
+                    transition: "transform 0.5s ease",
+                  }
                   : {
-                      transform: "translateX(20px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(20px)",
+                    transition: "transform 0.5s ease",
+                  }
               }
             ></span>
           </span>
@@ -321,74 +317,11 @@ class SettingSwitch extends React.Component<
         <div className="single-control-switch-container" key="isWordDefinition">
           <span className="single-control-switch-title">
             <Trans>Enable word definitions</Trans>
-            <span style={{ fontSize: "13px", color: "#f16464" }}> (Pro)</span>
+            <span style={{ fontSize: "13px", color: "#f16464" }}> (TODO)</span>
           </span>
           <span
             className="single-control-switch"
-            onClick={async () => {
-              const next = !this.state.isWordDefinition;
-              if (next) {
-                if (!this.props.isAuthed) {
-                  toast(
-                    this.props.t("Please upgrade to Pro to use this feature")
-                  );
-                  this.props.handleSetting(true);
-                  this.props.handleSettingMode("account");
-                  ConfigService.setReaderConfig("fullTranslationMode", "no");
-                  return;
-                }
-                if (this.state.isBionic) {
-                  toast.error(
-                    this.props.t(
-                      "Word definitions and fast reading mode cannot be enabled at the same time"
-                    )
-                  );
-                  return;
-                }
-                let lang = "";
-                if (this.props.htmlBook?.rendition) {
-                  try {
-                    const text =
-                      await this.props.htmlBook.rendition.audioText();
-                    if (text && text.length > 0) {
-                      lang = detectLocalLanguage(text.slice(0, 500).join(" "));
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }
-                if (lang === "ko") {
-                  toast.error(
-                    this.props.t(
-                      "Unsupported language for word definition, currently only Chinese, Japanese and English are supported"
-                    )
-                  );
-                  return;
-                }
-                ConfigService.setListConfig(
-                  this.props.currentBook.key,
-                  "wordDefinitionBooks"
-                );
-
-                this.setState({
-                  isWordDefinition: true,
-                  wordDefinitionLang: lang,
-                });
-              } else {
-                ConfigService.deleteListConfig(
-                  this.props.currentBook.key,
-                  "wordDefinitionBooks"
-                );
-                this.setState({
-                  isWordDefinition: false,
-                  wordDefinitionLang: "",
-                });
-              }
-              toast(this.props.t("Change successful"));
-              setTimeout(async () => {
-                this.props.renderBookFunc();
-              }, 500);
-            }}
+            onClick={() => toast(this.props.t("TODO: Inline word definitions are not available yet"))}
             style={this.state.isWordDefinition ? {} : { opacity: 0.6 }}
           >
             <span
@@ -396,13 +329,13 @@ class SettingSwitch extends React.Component<
               style={
                 !this.state.isWordDefinition
                   ? {
-                      transform: "translateX(0px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(0px)",
+                    transition: "transform 0.5s ease",
+                  }
                   : {
-                      transform: "translateX(20px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(20px)",
+                    transition: "transform 0.5s ease",
+                  }
               }
             ></span>
           </span>
@@ -512,13 +445,13 @@ class SettingSwitch extends React.Component<
               style={
                 !this.state.isReadingRuler
                   ? {
-                      transform: "translateX(0px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(0px)",
+                    transition: "transform 0.5s ease",
+                  }
                   : {
-                      transform: "translateX(20px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(20px)",
+                    transition: "transform 0.5s ease",
+                  }
               }
             ></span>
           </span>
@@ -561,13 +494,13 @@ class SettingSwitch extends React.Component<
               style={
                 !this.state.isSpeedReading
                   ? {
-                      transform: "translateX(0px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(0px)",
+                    transition: "transform 0.5s ease",
+                  }
                   : {
-                      transform: "translateX(20px)",
-                      transition: "transform 0.5s ease",
-                    }
+                    transform: "translateX(20px)",
+                    transition: "transform 0.5s ease",
+                  }
               }
             ></span>
           </span>
@@ -647,13 +580,13 @@ class SettingSwitch extends React.Component<
                   style={
                     !this.state[item.propName]
                       ? {
-                          transform: "translateX(0px)",
-                          transition: "transform 0.5s ease",
-                        }
+                        transform: "translateX(0px)",
+                        transition: "transform 0.5s ease",
+                      }
                       : {
-                          transform: "translateX(20px)",
-                          transition: "transform 0.5s ease",
-                        }
+                        transform: "translateX(20px)",
+                        transition: "transform 0.5s ease",
+                      }
                   }
                 ></span>
               </span>

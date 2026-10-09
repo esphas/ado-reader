@@ -12,7 +12,7 @@ const mapStateToProps = (state: stateType) => {
   return {
     isSpeechOpen: state.reader.isSpeechOpen,
     plugins: state.manager.plugins,
-    isAuthed: state.manager.isAuthed,
+
     currentBook: state.book.currentBook,
     isSettingLocked: state.reader.isSettingLocked,
     isDockedRight: state.reader.isDockedRight,

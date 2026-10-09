@@ -14,9 +14,7 @@ export interface ManagerProps extends RouteComponentProps<any> {
   isShowPopupNote: boolean;
   isAboutOpen: boolean;
   isShowLoading: boolean;
-  isShowNew: boolean;
-  isShowSupport: boolean;
-  isAuthed: boolean;
+
   isOpenSortShelfDialog: boolean;
   isOpenLocalFileDialog: boolean;
   isOpenOPDSDialog: boolean;
@@ -34,8 +32,7 @@ export interface ManagerProps extends RouteComponentProps<any> {
   handleAddDialog: (isOpenAddDialog: boolean) => void;
   handleDetailDialog: (isDetailDialog: boolean) => void;
   handleLoadingDialog: (isShowLoading: boolean) => void;
-  handleNewDialog: (isShowNew: boolean) => void;
-  handleShowSupport: (isShowSupport: boolean) => void;
+
   handleLocalFileDialog: (isOpenLocalFileDialog: boolean) => void;
   handleImportDialog: (isOpenImportDialog: boolean) => void;
   handleOPDSDialog: (isOpen: boolean) => void;
@@ -53,7 +50,7 @@ export interface ManagerProps extends RouteComponentProps<any> {
 export interface ManagerState {
   totalBooks: number;
   favoriteBooks: number;
-  isAuthed: boolean;
+
   isError: boolean;
   isCopied: boolean;
   isUpdated: boolean;

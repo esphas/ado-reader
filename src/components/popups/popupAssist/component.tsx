@@ -8,15 +8,11 @@ import {
 import Parser from "html-react-parser";
 import DOMPurify from "dompurify";
 import { Trans } from "react-i18next";
-import {
-  handleContextMenu,
-  REPORT_REASONS,
-  vexSelectAsync,
-} from "../../../utils/common";
+import { handleContextMenu } from "../../../utils/common";
 import toast from "react-hot-toast";
 import { saveAs } from "file-saver";
-import { getAnswerStream } from "../../../utils/request/reader";
-import { chatStream, llmReport } from "../../../utils/request/common";
+
+import { chatStream } from "../../../utils/request/common";
 import { marked } from "marked";
 import { sampleQuestion } from "../../../constants/settingList";
 class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
@@ -149,31 +145,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
       });
       this.props.handleQuoteText("");
     }
-    if (!this.state.aiService) {
-      let pluginList = this.props.plugins.filter(
-        (item) =>
-          item.type === "assistant" && !item.key.startsWith("official-ai-")
-      );
-      if (pluginList.length > 0) {
-        this.setState({
-          aiService: pluginList[0].key,
-        });
-        ConfigService.setReaderConfig("aiService", pluginList[0].key);
-      } else if (this.props.isAuthed) {
-        this.setState({
-          aiService: "official-ai-assistant-plugin",
-          isAddNew: false,
-        });
-        ConfigService.setReaderConfig(
-          "aiService",
-          "official-ai-assistant-plugin"
-        );
-      } else {
-        this.setState({
-          isAddNew: true,
-        });
-      }
-    }
+    if (!this.state.aiService) { toast(this.props.t("Please select a replacement service")); this.setState({ isAddNew: !this.props.plugins.some(p => p.type === "assistant") }); }
   }
   componentDidUpdate(
     prevProps: PopupAssistProps,
@@ -236,24 +208,21 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
     let originalText =
       this.state.mode === "ask"
         ? this.props.originalText
-            .replace(/(\r\n|\n|\r)/gm, "")
-            .replace(/-/gm, "")
-            // Remove common garbage characters
-            .replace(
-              /[^\x20-\x7E\u00A0-\u00FF\u0100-\u017F\u4E00-\u9FFF\u3000-\u303F]/g,
-              ""
-            )
-            // Remove consecutive spaces
-            .replace(/\s{2,}/g, " ")
-            .trim()
+          .replace(/(\r\n|\n|\r)/gm, "")
+          .replace(/-/gm, "")
+          // Remove common garbage characters
+          .replace(
+            /[^\x20-\x7E\u00A0-\u00FF\u0100-\u017F\u4E00-\u9FFF\u3000-\u303F]/g,
+            ""
+          )
+          // Remove consecutive spaces
+          .replace(/\s{2,}/g, " ")
+          .trim()
         : "";
-    if (
-      (!ConfigService.getReaderConfig("aiService") ||
-        this.props.plugins.findIndex(
-          (item) => item.key === ConfigService.getReaderConfig("aiService")
-        ) === -1) &&
-      !this.props.isAuthed
-    ) {
+    if ((!ConfigService.getReaderConfig("aiService") ||
+      this.props.plugins.findIndex(
+        (item) => item.key === ConfigService.getReaderConfig("aiService")
+      ) === -1)) {
       this.setState({ isAddNew: true });
     }
     if (this.state.mode === "ask" && !originalText) {
@@ -266,7 +235,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
       if (
         ConfigService.getReaderConfig("aiService") &&
         ConfigService.getReaderConfig("aiService") ===
-          "custom-ai-assistant-plugin"
+        "custom-ai-assistant-plugin"
       ) {
         let plugin = this.props.plugins.find(
           (item) => item.key === "custom-ai-assistant-plugin"
@@ -342,77 +311,12 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
         if (ConfigService.getReaderConfig("isManualScroll") !== "yes") {
           this.scrollToBottom();
         }
-      } else if (
-        ConfigService.getReaderConfig("aiService") &&
-        ConfigService.getReaderConfig("aiService") !==
-          "official-ai-assistant-plugin"
-      ) {
-      } else if (this.props.isAuthed) {
-        let plugin = this.props.plugins.find(
-          (item) => item.key === "official-ai-assistant-plugin"
-        );
-        if (!plugin) {
-          return;
-        }
-        this.answerTextAccumulator = "";
-        this.startUpdateInterval();
-        let res = await getAnswerStream(
-          text,
-          this.state.question,
-          this.state.mode === "ask"
-            ? this.state.askHistory
-            : this.state.chatHistory,
-          this.state.mode,
-          (result) => {
-            if (result && result.text) {
-              if (!this.answerTextAccumulator) {
-                this.setState({ isWaiting: false });
-              }
-              this.answerTextAccumulator += result.text;
-            }
-          }
-        );
-        this.stopUpdateInterval(this.answerTextAccumulator);
-        const finalAnswer = this.answerTextAccumulator;
-        this.answerTextAccumulator = "";
-        if (res.data && res.done) {
-          if (this.state.mode === "ask") {
-            this.setState({
-              askHistory: [
-                ...this.state.askHistory,
-                {
-                  role: "assistant",
-                  content: finalAnswer,
-                },
-              ],
-              answer: "",
-              question: "",
-              isWaiting: false,
-            });
-          } else {
-            this.setState({
-              chatHistory: [
-                ...this.state.chatHistory,
-                {
-                  role: "assistant",
-                  content: finalAnswer,
-                },
-              ],
-              answer: "",
-              question: "",
-              isWaiting: false,
-            });
-          }
-        }
-        if (ConfigService.getReaderConfig("isManualScroll") !== "yes") {
-          this.scrollToBottom();
-        }
       }
     } catch (error) {
       toast.error(
         this.props.t("Error happened") +
-          ": " +
-          (error instanceof Error ? error.message : String(error))
+        ": " +
+        (error instanceof Error ? error.message : String(error))
       );
       console.error(error);
       this.setState({
@@ -421,12 +325,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
     }
   };
   handleChangeAiService = (aiService: string) => {
-    if (aiService === "official-ai-assistant-plugin" && !this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
+
     let plugin = this.props.plugins.find((item) => item.key === aiService);
     if (!plugin) {
       return;
@@ -448,39 +347,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
       toast.success(this.props.t("Copied"));
     });
   };
-  handleReportAnswer = async (content: string, index: number) => {
-    const history =
-      this.state.mode === "ask"
-        ? this.state.askHistory
-        : this.state.chatHistory;
-    const userMessage = history
-      .slice(0, index)
-      .reverse()
-      .find((item) => item.role === "user");
-    const reason = await vexSelectAsync(
-      "Report reason",
-      REPORT_REASONS.map((item) => ({ value: item, label: item }))
-    );
-    if (!reason) {
-      return;
-    }
-    toast.loading(this.props.t("Please wait"), { id: "report-feedback" });
-    try {
-      await llmReport({
-        answer: content,
-        question: userMessage?.content || "",
-        reason: this.props.t(reason),
-        user_id: (this.props.userInfo?.time_created || "") + "" || "anonymous",
-      });
-      toast.success(this.props.t("Thank you for your feedback"), {
-        id: "report-feedback",
-      });
-    } catch (error) {
-      toast.success(this.props.t("Thank you for your feedback"), {
-        id: "report-feedback",
-      });
-    }
-  };
+
   handleRenderHistoryMessage = (message: any[]) => {
     return message.map((item, index) => {
       return (
@@ -497,7 +364,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
               marked.parse(item.content) + "<address></address>"
             ) || " ",
             {
-              replace: (_domNode) => {},
+              replace: (_domNode) => { },
             }
           )}
           {item.role === "assistant" && (
@@ -508,14 +375,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
               <span className="icon-copy-line"></span>
             </div>
           )}
-          {item.role === "assistant" && (
-            <div
-              className="popup-assist-copy-button popup-assist-report-button"
-              onClick={() => this.handleReportAnswer(item.content, index)}
-            >
-              <span className="icon-report" style={{ fontWeight: 500 }}></span>
-            </div>
-          )}
+
           {item.role === "assistant" && index === message.length - 1 && (
             <div className="popup-assist-disclaimer">
               {this.props.t(
@@ -540,9 +400,8 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     const day = now.getDate();
-    const dateStr = `${year}-${month <= 9 ? "0" + month : month}-${
-      day <= 9 ? "0" + day : day
-    }`;
+    const dateStr = `${year}-${month <= 9 ? "0" + month : month}-${day <= 9 ? "0" + day : day
+      }`;
     const modeLabel = this.state.mode === "ask" ? "Reading" : "Chat";
     const bookName = this.props.currentBook?.name || "Unknown";
     const exportData = {
@@ -761,12 +620,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
                       className="add-dialog-shelf-list-option"
                     >
                       {this.props.t(item.displayName)}
-                      {item.key === "official-ai-assistant-plugin" && (
-                        <span style={{ fontSize: "13px", color: "#f16464" }}>
-                          {" "}
-                          (Pro)
-                        </span>
-                      )}
+
                     </option>
                   );
                 })}
@@ -852,9 +706,9 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
                     <span>{this.props.t("Thinking, please wait...")}</span>
                   </div>
                 ) : (this.state.mode === "ask"
-                    ? this.state.askHistory
-                    : this.state.chatHistory
-                  ).length > 0 ? (
+                  ? this.state.askHistory
+                  : this.state.chatHistory
+                ).length > 0 ? (
                   <div className="popup-message-assistant">
                     {Parser(
                       DOMPurify.sanitize(
@@ -863,7 +717,7 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
                         ) + "<address></address>"
                       ) || " ",
                       {
-                        replace: (_domNode) => {},
+                        replace: (_domNode) => { },
                       }
                     )}
                   </div>
@@ -871,11 +725,11 @@ class PopupAssist extends React.Component<PopupAssistProps, PopupAssistState> {
                   <div className="popup-message-assistant">
                     {this.state.mode === "ask"
                       ? this.props.t(
-                          "Hi there! What questions do you have about this chapter?"
-                        )
+                        "Hi there! What questions do you have about this chapter?"
+                      )
                       : this.props.t(
-                          "Hi there! I'm happy to help with any questions about reading or learning"
-                        )}
+                        "Hi there! I'm happy to help with any questions about reading or learning"
+                      )}
                   </div>
                 )}
               </div>

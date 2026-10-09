@@ -43,7 +43,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const curtime = String(Math.floor(Date.now() / 1000));
 
   if (!appKey || !appSecret) {
-    return "Missing Youdao appKey or appSecret";
+    throw new Error("Missing Youdao appKey or appSecret");
   }
 
   const params: Record<string, string> = {
@@ -95,7 +95,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
     if (response.status === 200 && response.data) {
       if (response.data.errorCode && response.data.errorCode !== "0") {
-        return `${response.data.errorCode}: ${response.data.errorMsg || "Request failed"}`;
+        throw new Error(`${response.data.errorCode}: ${response.data.errorMsg || "Request failed"}`);
       }
 
       if (
@@ -106,8 +106,8 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
       }
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

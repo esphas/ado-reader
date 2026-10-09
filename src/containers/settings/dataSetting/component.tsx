@@ -1,18 +1,8 @@
+import { FORK_HELP } from "../../../constants/fork";
 import React from "react";
 import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
-import {
-  clearAllData,
-  confirmBrowserExtensionAsync,
-  generateSyncRecord,
-  getStorageLocation,
-  getWebsiteLang,
-  getWebsiteUrl,
-  reloadManager,
-  vexComfirmAsync,
-  vexOpenAsync,
-  vexPromptAsync,
-} from "../../../utils/common";
+import { clearAllData, generateSyncRecord, getStorageLocation, reloadManager, vexComfirmAsync, vexOpenAsync, vexPromptAsync } from "../../../utils/common";
 
 import toast from "react-hot-toast";
 import { isElectron } from "react-device-detect";
@@ -102,12 +92,6 @@ class DataSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       return;
     }
 
-    if (!isElectron) {
-      if (!(await confirmBrowserExtensionAsync())) {
-        return;
-      }
-    }
-
     const savedConfig =
       ConfigService.getObjectConfig(
         "koReaderSyncConfig",
@@ -142,7 +126,7 @@ class DataSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       },
       "",
       labels,
-      getWebsiteUrl() + getWebsiteLang() + "/add-thirdparty"
+      FORK_HELP
     );
 
     if (!result) {
@@ -211,12 +195,6 @@ class DataSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     const currentlyEnabled = this.state[item.propName];
 
     if (!currentlyEnabled && item.requiresAuth) {
-      if (!isElectron) {
-        if (!(await confirmBrowserExtensionAsync())) {
-          return;
-        }
-      }
-
       // Special case: Markdown sync uses a folder picker in Electron
       if (item.propName === "isEnableMarkdownSync" && isElectron) {
         const ipcRenderer = window.electronAPI;
@@ -260,7 +238,7 @@ class DataSetting extends React.Component<SettingInfoProps, SettingInfoState> {
         defaultValues,
         "",
         labelsMap,
-        getWebsiteUrl() + getWebsiteLang() + "/add-thirdparty"
+        FORK_HELP
       );
 
       if (!result) {

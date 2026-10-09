@@ -51,7 +51,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const date = getDate(timestamp);
 
   if (!secretId || !secretKey) {
-    return "Missing Tencent Cloud secretId or secretKey";
+    throw new Error("Missing Tencent Cloud secretId or secretKey");
   }
 
   const payload = JSON.stringify({
@@ -103,10 +103,10 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
   if (res.status === 200 && res.data && res.data.Response) {
     if (res.data.Response.Error) {
-      return `${res.data.Response.Error.Code}: ${res.data.Response.Error.Message}`;
+      throw new Error(`${res.data.Response.Error.Code}: ${res.data.Response.Error.Message}`);
     }
     return res.data.Response.TargetText;
   }
 
-  return "Error happened";
+  throw new Error("Error happened");
 }

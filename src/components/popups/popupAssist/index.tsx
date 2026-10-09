@@ -17,8 +17,7 @@ const mapStateToProps = (state: stateType) => {
     quoteText: state.reader.quoteText,
     htmlBook: state.reader.htmlBook,
     plugins: state.manager.plugins,
-    isAuthed: state.manager.isAuthed,
-    userInfo: state.manager.userInfo,
+
   };
 };
 const actionCreator = {

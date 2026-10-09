@@ -15,7 +15,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const targetLanguage = to || "zh-CN";
 
   if (!apiKey) {
-    return "Missing Google Cloud apiKey";
+    throw new Error("Missing Google Cloud apiKey");
   }
 
   if (!text) {
@@ -59,8 +59,8 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
       );
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

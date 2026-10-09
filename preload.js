@@ -1,10 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 const INVOKE_CHANNELS = new Set([
-  "cancel-download-app",
+
   "discord-rpc-update",
   "discord-rpc-clear",
-  "update-win-app",
+
   "open-book",
   "generate-tts",
   "get-tts-voices",
@@ -51,7 +51,7 @@ const INVOKE_CHANNELS = new Set([
   "open-console",
   "reload-reader",
   "reload-main",
-  "new-chat",
+
   "clear-all-data",
   "new-tab",
   "reload-tab",
@@ -95,12 +95,12 @@ const EVENT_CHANNELS = new Set([
   "before-reader-close",
   "before-tab-close",
   "reading-finished",
-  "chat-message",
+
   "import-url-from-link",
   "open-book-from-link",
   "open-note-from-link",
   "picker-finished",
-  "download-app-progress",
+
   "backup-progress",
   "restore-progress",
 ]);

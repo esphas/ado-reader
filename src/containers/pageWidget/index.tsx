@@ -25,7 +25,7 @@ const mapStateToProps = (state: stateType) => {
     currentChapterIndex: state.reader.currentChapterIndex,
     htmlBook: state.reader.htmlBook,
     isShowBookmark: state.viewArea.isShowBookmark,
-    isAuthed: state.manager.isAuthed,
+
     jumpPosition: state.reader.jumpPosition,
   };
 };

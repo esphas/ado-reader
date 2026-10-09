@@ -11,7 +11,7 @@ export interface ViewerProps {
   isShow: boolean;
   readerMode: string;
   isOpenMenu: boolean;
-  isAuthed: boolean;
+
   isNavLocked: boolean;
   isSettingLocked: boolean;
   isDockedRight: boolean;
@@ -27,7 +27,7 @@ export interface ViewerProps {
   margin: string;
   handleRenderBookFunc: (renderBookFunc: () => void) => void;
   renderNoteFunc: () => void;
-  handleFetchAuthed: () => void;
+
   t: (title: string) => string;
   handleReadingState: (isReading: boolean) => void;
   handleReadingBook: (book: BookModel) => void;

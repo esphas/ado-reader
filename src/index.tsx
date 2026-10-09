@@ -1,3 +1,4 @@
+
 import React from "react";
 import ReactDOM from "react-dom";
 import "./assets/styles/reset.css";
@@ -15,9 +16,13 @@ import {
   applyAppBackgroundImage,
 } from "./utils/reader/launchUtil";
 import { migrateConfig } from "./utils/common";
+import { migrateRemovedServices } from "./utils/storage/serviceMigration";
+import { handleClearToken } from "./utils/request/common";
+void handleClearToken().catch(console.error);
 initTheme();
 initSystemFont();
 migrateConfig();
+migrateRemovedServices();
 applyCustomSystemCSS();
 applyAppBackgroundImage();
 const container = document.getElementById("root")!;

@@ -1,3 +1,4 @@
+import { restoreSetting } from "../storage/restoreSettings";
 import { generateSyncRecord, getStorageLocation } from "../common";
 import { getCloudConfig, upgradeConfig, upgradeStorage } from "./common";
 import localforage from "localforage";
@@ -137,7 +138,7 @@ export const restoreFromBrowser = async (): Promise<
                   console.warn("Skipping non-string config value:", key);
                   continue;
                 }
-                ConfigService.setItem(key, config[key]);
+                restoreSetting(key, config[key]);
               }
             } else if (entryName === "sync.json") {
               const text = await zip.file(fileName)!.async("string");
@@ -313,7 +314,7 @@ export const restoreFromSnapshot = async (fileName: string) => {
     if (configData) {
       try {
         const config = JSON.parse(new TextDecoder().decode(configData));
-        for (const key in config) ConfigService.setItem(key, config[key]);
+        for (const key in config) restoreSetting(key, config[key]);
       } catch (error) {
         console.error("restore config error:", error);
       }
@@ -404,7 +405,7 @@ export const restoreFromfilePath = async (filePath: string) => {
             console.warn("Skipping non-string config value:", key);
             continue;
           }
-          ConfigService.setItem(key, config[key]);
+          restoreSetting(key, config[key]);
         }
       } else if (entryName === "sync.json") {
         const text = new TextDecoder().decode(file.buffer);
@@ -470,7 +471,7 @@ export const unzipOldConfig = async (zipEntries: any) => {
         } else if (zipEntry.name === "pdfjs.history.json") {
           ConfigService.setItem("pdfjs.history", text);
         } else {
-          ConfigService.setItem(zipEntry.name.split(".")[0], text);
+          restoreSetting(zipEntry.name.split(".")[0], text);
         }
       }
     }

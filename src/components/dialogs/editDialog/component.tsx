@@ -11,7 +11,7 @@ import { isElectron } from "react-device-detect";
 import MetadataDialog from "../metadataDialog";
 import { MetadataResult } from "../metadataDialog/interface";
 import { trimSpecialCharacters } from "../../../utils/common";
-import { analyzeBookTitle } from "../../../utils/request/reader";
+import { analyzeBookTitle, getAssignedAI } from "../../../utils/request/selfHosted";
 declare var window: any;
 
 class EditDialog extends React.Component<EditDialogProps, EditDialogState> {
@@ -86,10 +86,10 @@ class EditDialog extends React.Component<EditDialogProps, EditDialogState> {
   };
 
   handleAnalyzeTitle = async () => {
-    if (!this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
+    if (!getAssignedAI("aiTitleModel")) {
+      toast(this.props.t("Please configure a title analysis model in Settings - AI"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
+      this.props.handleSettingMode("ai");
       return;
     }
     if (this.state.isAnalyzing) return;
@@ -100,17 +100,17 @@ class EditDialog extends React.Component<EditDialogProps, EditDialogState> {
     this.setState({ isAnalyzing: true });
     try {
       const response = await analyzeBookTitle(title);
-      if (response && response.code === 200 && response.data?.name) {
+      if (response?.name) {
         if (this.nameRef.current) {
-          this.nameRef.current.value = response.data.name;
+          this.nameRef.current.value = response.name;
         }
-        if (this.authorRef.current && response.data.author) {
-          this.authorRef.current.value = response.data.author;
+        if (this.authorRef.current && response.author) {
+          this.authorRef.current.value = response.author;
         }
         toast.success(this.props.t("Title recognized successfully"));
       }
     } catch (error) {
-      console.error(error, title);
+      console.error("Title analysis failed", error);
       toast.error(this.props.t("Failed to recognize title"));
     } finally {
       this.setState({ isAnalyzing: false });
@@ -212,19 +212,12 @@ class EditDialog extends React.Component<EditDialogProps, EditDialogState> {
               opacity: 0.8,
             }}
             onClick={() => {
-              if (!this.props.isAuthed) {
-                toast(
-                  this.props.t("Please upgrade to Pro to use this feature")
-                );
-                this.props.handleSetting(true);
-                this.props.handleSettingMode("account");
-                return;
-              }
+
               this.setState({ isMetadataDialogOpen: true });
             }}
           >
             <Trans>Get metadata</Trans>
-            <span style={{ fontSize: "13px", color: "#f16464" }}> (Pro)</span>
+            <span style={{ fontSize: "13px", color: "#f16464" }}> (TODO)</span>
           </div>
         </div>
 

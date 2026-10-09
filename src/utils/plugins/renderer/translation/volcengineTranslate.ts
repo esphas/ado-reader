@@ -68,7 +68,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const service = "translate";
 
   if (!accessKeyId || !secretAccessKey) {
-    return "Missing Volcengine accessKeyId or secretAccessKey";
+    throw new Error("Missing Volcengine accessKeyId or secretAccessKey");
   }
 
   const payloadObject: { TargetLanguage: string; TextList: string[]; SourceLanguage?: string } = {
@@ -147,7 +147,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
     if (res.status === 200 && res.data) {
       const { ResponseMetadata, TranslationList } = res.data;
       if (ResponseMetadata && ResponseMetadata.Error) {
-        return `${ResponseMetadata.Error.Code}: ${ResponseMetadata.Error.Message}`;
+        throw new Error(`${ResponseMetadata.Error.Code}: ${ResponseMetadata.Error.Message}`);
       }
       if (
         Array.isArray(TranslationList) &&
@@ -158,8 +158,8 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
       }
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

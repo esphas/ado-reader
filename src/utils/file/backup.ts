@@ -204,7 +204,7 @@ export const backupFromPath = async (
   // 通过 configFiles 单独传入 —— 主进程只读取 backupPath 参数指定的源，
   // 渲染进程不再向主进程透传任意文件内容。
   const dirs: string[] = [];
-  for (const dir of ["book", "cover", "dict", "background", "snapshot"]) {
+  for (const dir of ["book", "cover", "dict", "background", "font", "snapshot"]) {
     if (fs.existsSync(path.join(dataPath, dir))) {
       dirs.push(dir);
     }

@@ -1,6 +1,7 @@
 import PluginModel from "../../../models/Plugin";
 import { RouteComponentProps } from "react-router-dom";
 export interface SettingInfoProps extends RouteComponentProps<any> {
+  plugins: PluginModel[];
   handleSetting: (isSettingOpen: boolean) => void;
   handleSettingMode: (settingMode: string) => void;
   handleFetchPlugins: () => void;
@@ -28,6 +29,8 @@ export interface SettingInfoState {
   testResult: string;
   fetchedModels: { id: string; name: string }[];
   isFetchingModels: boolean;
+  aiTitleModel: string;
+  fullTranslationService: string;
   aiTranslateModel: string;
   aiDictModel: string;
   aiAssistanceModel: string;

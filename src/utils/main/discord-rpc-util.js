@@ -65,13 +65,13 @@ const setDiscordActivity = async ({ bookTitle, author, percentage } = {}) => {
       details: bookTitle,
       state: `${progressBar} ${percentage}%  |  by ${author}`,
       largeImageKey: "koodo_reader_logo",
-      largeImageText: "Koodo Reader",
+      largeImageText: "Ado Reader",
       startTimestamp: Date.now(),
       instance: false,
       buttons: [
         {
-          label: "Get Koodo Reader",
-          url: "https://koodoreader.com",
+          label: "Get Ado Reader",
+          url: "https://github.com/esphas/ado-reader",
         },
       ],
     });

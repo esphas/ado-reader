@@ -8,7 +8,7 @@ export const translate: TranslatePlugin = async (
   config
 ) => {
   if (config.url === "") {
-    return "Error happened";
+    throw new Error("Error happened");
   }
   let transUrl = config.url || "http://127.0.0.1:5000/translate";
   let headers = {
@@ -29,6 +29,6 @@ export const translate: TranslatePlugin = async (
   if (transRes.status === 200) {
     return transRes.data.translatedText;
   } else {
-    return "Error happened";
+    throw new Error("Error happened");
   }
 };

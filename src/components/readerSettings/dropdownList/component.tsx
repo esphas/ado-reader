@@ -1,4 +1,6 @@
 import React from "react";
+import { createFullTranslation } from "../../../utils/request/selfHosted";
+import { getFullTranslationTarget } from "../../../utils/common";
 import {
   dropdownList,
   fullTranslationLangList,
@@ -103,8 +105,18 @@ class DropdownList extends React.Component<
     });
   };
 
-  handleView(event: any, option: string) {
+  async handleView(event: any, option: string) {
     const value = event.target.value;
+    if (option === "fullTranslationMode" && value && value !== "no") {
+      try {
+        await createFullTranslation(getFullTranslationTarget());
+      } catch (error) {
+        toast.error((error as Error).message);
+        this.props.handleSetting(true);
+        this.props.handleSettingMode("ai");
+        return;
+      }
+    }
     ConfigService.setReaderConfig(option, value);
     let arr = [value];
     switch (option) {
@@ -169,16 +181,7 @@ class DropdownList extends React.Component<
             "fullTranslationBooks"
           );
         } else {
-          if (!this.props.isAuthed) {
-            this.setState({
-              fullTranslationModeValue: "no",
-            });
-            toast(this.props.t("Please upgrade to Pro to use this feature"));
-            this.props.handleSetting(true);
-            this.props.handleSettingMode("account");
-            ConfigService.setReaderConfig("fullTranslationMode", "no");
-            return;
-          }
+
           ConfigService.setListConfig(
             this.props.currentBook.key,
             "fullTranslationBooks"
@@ -236,12 +239,7 @@ class DropdownList extends React.Component<
             <li className="paragraph-character-container">
               <p className="general-setting-title">
                 <Trans>{item.title}</Trans>
-                {item.value === "fullTranslationMode" && (
-                  <span style={{ fontSize: "13px", color: "#f16464" }}>
-                    {" "}
-                    (Pro)
-                  </span>
-                )}
+
               </p>
               <select
                 name=""
@@ -294,7 +292,7 @@ class DropdownList extends React.Component<
                           ? this.props.t("Disable")
                           : subItem.label
                         : item.value === "fontFamily" ||
-                            item.value === "subFontFamily"
+                          item.value === "subFontFamily"
                           ? subItem.value === "Built-in font"
                             ? this.props.t(subItem.label)
                             : subItem.label
@@ -318,9 +316,9 @@ class DropdownList extends React.Component<
                         (opt) =>
                           opt.code === this.state.fullTranslationTargetValue ||
                           KookitConfig.ConvertLangMap[opt.code] ===
-                            KookitConfig.ConvertLangMap[
-                              this.state.fullTranslationTargetValue
-                            ]
+                          KookitConfig.ConvertLangMap[
+                          this.state.fullTranslationTargetValue
+                          ]
                       )?.code || this.state.fullTranslationTargetValue
                     }
                     onChange={(event) => {

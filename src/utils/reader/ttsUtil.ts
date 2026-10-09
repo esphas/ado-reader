@@ -1,7 +1,7 @@
 import { Howl } from "howler";
 import PluginModel from "../../models/Plugin";
 import { getAllVoices, getFormatFromAudioPath } from "../common";
-import { getTTSAudio } from "../request/reader";
+
 import { isElectron } from "react-device-detect";
 import { TextRule } from "../common";
 
@@ -52,151 +52,46 @@ class TTSUtil {
       voiceName: string;
       voiceEngine: string;
     }[],
-    targetCacheCount: number,
-    isFirst: boolean,
-    isOfficialAIVoice: boolean
+    targetCacheCount: number
   ) {
     this.isPaused = false;
 
-    if (isOfficialAIVoice) {
-      const cacheCount = Math.min(
-        targetCacheCount,
-        audioNodeList.length - startIndex
-      );
-      // 并发执行，并发数量为3，但保证添加顺序
-      const CONCURRENT_LIMIT = 10;
-      //删除index小于startIndex的缓存
-      this.audioPaths = this.audioPaths.filter(
-        (item) => item.index >= startIndex - 5
-      );
-
-      for (let i = 0; i < cacheCount; i += CONCURRENT_LIMIT) {
-        const batch: any[] = [];
-
-        for (let j = 0; j < CONCURRENT_LIMIT && i + j < cacheCount; j++) {
-          const index = startIndex + i + j;
-          if (index >= audioNodeList.length) break;
-
-          // 如果已经缓存过或正在处理中，跳过
-          if (
-            this.audioPaths.find((item) => item.index === index) ||
-            this.processingIndexes.has(index)
-          ) {
-            continue;
-          }
-
-          // 标记为正在处理
-          this.processingIndexes.add(index);
-
-          const audioNode = audioNodeList[index];
-          let plugin = plugins.find(
-            (item) => item.key === audioNode.voiceEngine
-          );
-          if (!plugin) {
-            return "error";
-          }
-          let voice = (plugin.voiceList as any[]).find(
-            (voice) => voice.name === audioNode.voiceName
-          );
-          if (!voice) {
-            return "error";
-          }
-          // 创建异步任务
-          const task = this.getAudioPath(
-            audioNode.text,
-            speed,
-            audioNode.voiceEngine,
-            plugin,
-            voice,
-            isFirst
-          )
-            .then(async (res) => {
-              // 处理完成后，从处理集合中移除
-              this.processingIndexes.delete(index);
-              if (res) {
-                return { index, audioPath: res };
-              } else {
-                this.isPaused = true;
-                return null;
-              }
-            })
-            .catch((error) => {
-              // 出错时也要从处理集合中移除
-              this.processingIndexes.delete(index);
-              console.error(`Error caching audio for index ${index}:`, error);
-              return null;
-            });
-          batch.push(task);
-        }
-
-        // 等待当前批次完成
-        const batchResults = await Promise.all(batch);
-
-        // 将结果存储到 Map 中
-        for (const result of batchResults) {
-          if (result) {
-            if (this.audioPaths.find((item) => item.index === result.index)) {
-              this.audioPaths = this.audioPaths.map((item) => {
-                if (item.index === result.index) {
-                  return result;
-                } else {
-                  return item;
-                }
-              });
-            } else {
-              this.audioPaths.push(result);
-            }
-          } else {
-            this.isPaused = true;
-            return "error";
-          }
-        }
+    let maxCacheIndex = Math.min(
+      startIndex + targetCacheCount,
+      audioNodeList.length
+    );
+    for (let index = startIndex; index < maxCacheIndex; index++) {
+      if (this.isPaused) {
+        break;
       }
-    } else {
-      let maxCacheIndex = Math.min(
-        startIndex + targetCacheCount,
-        audioNodeList.length
+      // 如果已经缓存过或正在处理中，跳过
+      if (
+        this.audioPaths.find((item) => item.index === index) ||
+        this.processingIndexes.has(index)
+      ) {
+        continue;
+      }
+      // 标记为正在处理
+      this.processingIndexes.add(index);
+      const audioNode = audioNodeList[index];
+      let plugin = plugins.find((item) => item.key === audioNode.voiceEngine);
+      if (!plugin) {
+        return "error";
+      }
+      let voice = (plugin.voiceList as any[]).find(
+        (voice) => voice.name === audioNode.voiceName
       );
-      for (let index = startIndex; index < maxCacheIndex; index++) {
-        if (this.isPaused) {
-          break;
-        }
-        // 如果已经缓存过或正在处理中，跳过
-        if (
-          this.audioPaths.find((item) => item.index === index) ||
-          this.processingIndexes.has(index)
-        ) {
-          continue;
-        }
-        // 标记为正在处理
-        this.processingIndexes.add(index);
-        const audioNode = audioNodeList[index];
-        let plugin = plugins.find((item) => item.key === audioNode.voiceEngine);
-        if (!plugin) {
-          return "error";
-        }
-        let voice = (plugin.voiceList as any[]).find(
-          (voice) => voice.name === audioNode.voiceName
-        );
-        if (!voice) {
-          return "error";
-        }
-        let audioPath = await this.getAudioPath(
-          audioNode.text,
-          speed,
-          audioNode.voiceEngine,
-          plugin,
-          voice,
-          isFirst
-        );
-        // 处理完成后，从处理集合中移除
-        this.processingIndexes.delete(index);
-        if (audioPath) {
-          this.audioPaths.push({ index: index, audioPath: audioPath });
-        } else {
-          this.isPaused = true;
-          break;
-        }
+      if (!voice) {
+        return "error";
+      }
+      let audioPath = await this.getAudioPath(audioNode.text, speed, plugin, voice);
+      // 处理完成后，从处理集合中移除
+      this.processingIndexes.delete(index);
+      if (audioPath) {
+        this.audioPaths.push({ index: index, audioPath: audioPath });
+      } else {
+        this.isPaused = true;
+        break;
       }
     }
   }
@@ -238,42 +133,25 @@ class TTSUtil {
   static async getAudioPath(
     text: string,
     speed: number,
-    voiceEngine: string,
     plugin,
-    voice,
-    isFirst: boolean
+    voice
   ) {
     // 朗读前应用文本替换 / 删除规则
     text = this.applyTextRules(text);
-    if (voiceEngine === "official-ai-voice-plugin") {
-      let res = await getTTSAudio(
-        text,
-        voice.language,
-        voice.name,
-        (speed + 100) / 100,
-        1.0,
-        isFirst
-      );
-      if (res && res.data && res.data.audio_base64) {
-        return res.data.audio_base64;
+    const payload: Record<string, unknown> = {
+      text: text,
+      speed,
+      pluginKey: plugin.key,
+      config: voice.config,
+    };
+    if (plugin.script) {
+      payload.script = plugin.script;
+      if (plugin.scriptSHA256) {
+        payload.scriptSHA256 = plugin.scriptSHA256;
       }
-      return "";
-    } else {
-      const payload: Record<string, unknown> = {
-        text: text,
-        speed,
-        pluginKey: plugin.key,
-        config: voice.config,
-      };
-      if (plugin.script) {
-        payload.script = plugin.script;
-        if (plugin.scriptSHA256) {
-          payload.scriptSHA256 = plugin.scriptSHA256;
-        }
-      }
-      let audioPath = await window.electronAPI.invoke("generate-tts", payload);
-      return audioPath;
     }
+    let audioPath = await window.electronAPI.invoke("generate-tts", payload);
+    return audioPath;
   }
   static setAudioPaths() {
     this.audioPaths = [];

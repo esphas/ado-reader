@@ -14,7 +14,7 @@ import { Trans } from "react-i18next";
 import SettingDialog from "../../components/dialogs/settingDialog";
 import { Route, Switch } from "react-router-dom";
 import { routes } from "../../router/routes";
-import Arrow from "../../components/arrow";
+
 import LoadingDialog from "../../components/dialogs/loadingDialog";
 import { Toaster } from "react-hot-toast";
 import DetailDialog from "../../components/dialogs/detailDialog";
@@ -40,7 +40,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
       favoriteBooks: Object.keys(
         ConfigService.getAllListConfig("favoriteBooks")
       ).length,
-      isAuthed: false,
+
       isError: false,
       isCopied: false,
       isUpdated: false,
@@ -245,10 +245,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
             this.props.handleAddDialog(false);
             this.props.handleDetailDialog(false);
             this.props.handleLoadingDialog(false);
-            if (!this.props.isAuthed) {
-              this.props.handleNewDialog(false);
-              this.props.handleShowSupport(false);
-            }
+
             this.props.handleLocalFileDialog(false);
             this.props.handleImportDialog(false);
             this.props.handleOPDSDialog(false);
@@ -264,8 +261,8 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
             this.props.isOpenOPDSDialog ||
             this.props.isOpenAutoImportDialog ||
             this.props.isOpenSortShelfDialog ||
-            this.props.isShowNew ||
-            this.props.isShowSupport ||
+
+
             this.props.isOpenDeleteDialog ||
             this.props.isOpenEditDialog ||
             this.props.isOpenLocalFileDialog ||

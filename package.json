@@ -1,18 +1,18 @@
 {
-  "name": "koodo-reader",
+  "name": "ado-reader",
   "main": "main.js",
   "version": "2.4.6",
-  "description": "Koodo Reader is a cross-platform ebook reader",
+  "description": "Ado Reader is a free, independent fork of Koodo Reader",
   "author": {
-    "name": "App by Troye",
-    "email": "feedback@koodoreader.com"
+    "name": "Ado Reader contributors"
   },
   "engines": {
     "node": ">=22.12.0",
     "npm": ">=6.0.0"
   },
-  "repository": "https://github.com/koodo-reader/koodo-reader",
+  "repository": "https://github.com/esphas/ado-reader",
   "private": false,
+  "packageManager": "yarn@1.22.22",
   "resolutions": {
     "@types/react": "^18.3.1",
     "node-gyp": "^10.0.0"
@@ -110,6 +110,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "typecheck": "tsc --noEmit --noUnusedLocals false --noUnusedParameters false",
     "eject": "react-scripts eject",
     "ele": "electron .",
     "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://127.0.0.1:3000/ && nodemon --watch main.js --watch src/utils/plugins/main --ext js --exec electron .\"",
@@ -120,8 +121,8 @@
   },
   "homepage": "./",
   "build": {
-    "appId": "xyz.960960.koodo",
-    "productName": "Koodo Reader",
+    "appId": "io.github.esphas.ado-reader",
+    "productName": "Ado Reader",
     "copyright": "Copyright (c) 2020-2025 ${author}",
     "files": [
       "build/**/*",
@@ -131,8 +132,7 @@
       "src/utils/plugins/main/**/*.js",
       "main.js",
       "src/utils/main/**/*.js",
-      "preload.js",
-      "chat-preload.js"
+      "preload.js"
     ],
     "extraResources": [
       {
@@ -144,9 +144,9 @@
       }
     ],
     "protocols": {
-      "name": "KoodoReader",
+      "name": "AdoReader",
       "schemes": [
-        "koodo-reader"
+        "ado-reader"
       ]
     },
     "directories": {
@@ -154,8 +154,8 @@
     },
     "publish": {
       "provider": "github",
-      "repo": "koodo-reader",
-      "owner": "koodo-reader"
+      "repo": "ado-reader",
+      "owner": "esphas"
     },
     "buildDependenciesFromSource": false,
     "nodeGypRebuild": false,
@@ -241,10 +241,9 @@
       "darkModeSupport": true,
       "entitlements": "assets/macos/entitlements.mac.plist",
       "entitlementsInherit": "assets/macos/entitlements.mac.plist",
-      "identity": "Liang Guo",
       "gatekeeperAssess": false,
       "hardenedRuntime": true,
-      "notarize": true,
+      "notarize": false,
       "target": [
         {
           "target": "dmg",
@@ -317,15 +316,6 @@
     },
     "portable": {
       "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
-    },
-    "appx": {
-      "applicationId": "com.koodoreader.electron",
-      "identityName": "AppbyTroye.KoodoReader",
-      "publisher": "CN=0AEAD7C6-DF4A-4D05-8FA0-D816D7DE37FF",
-      "publisherDisplayName": "App by Troye",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "displayName": "Koodo Reader",
-      "backgroundColor": "transparent"
     },
     "nsis": {
       "artifactName": "${productName}-${version}-${arch}.${ext}",

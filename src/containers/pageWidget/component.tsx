@@ -3,12 +3,8 @@ import "./pageWidget.css";
 import { PageWidgetProps, PageWidgetState } from "./interface";
 import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import { Trans } from "react-i18next";
-import { getBatchTrans, getWordDefinitions } from "../../utils/request/reader";
-import {
-  detectLocalLanguage,
-  getFullTranslationTarget,
-  isReadingRawPDF,
-} from "../../utils/common";
+import { createFullTranslation } from "../../utils/request/selfHosted";
+import { getFullTranslationTarget, isReadingRawPDF } from "../../utils/common";
 import toast from "react-hot-toast";
 import { isElectron } from "react-device-detect";
 import DatabaseService from "../../utils/storage/databaseService";
@@ -134,7 +130,6 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
       nextProps.htmlBook.rendition.on("rendered", async () => {
         await this.handlePageNum(nextProps.htmlBook.rendition);
         await this.handleBatchTranslation(nextProps.htmlBook.rendition);
-        await this.handleWordDefinition(nextProps.htmlBook.rendition);
       });
     }
     if (nextProps.readerMode !== this.props.readerMode) {
@@ -162,8 +157,9 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
   }
 
   getTransCache(chapterDocIndex: string): TransCache {
-    if (this.transCacheMap.has(chapterDocIndex)) {
-      return this.transCacheMap.get(chapterDocIndex)!;
+    const memoryKey = this.props.currentBook.key + ":" + chapterDocIndex;
+    if (this.transCacheMap.has(memoryKey)) {
+      return this.transCacheMap.get(memoryKey)!;
     }
     let cache: TransCache = {};
     if (isElectron && window.electronAPI && window.electronAPI.fs) {
@@ -178,7 +174,7 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
         cache = {};
       }
     }
-    this.transCacheMap.set(chapterDocIndex, cache);
+    this.transCacheMap.set(memoryKey, cache);
     return cache;
   }
 
@@ -205,15 +201,16 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
         !ConfigService.getAllListConfig("fullTranslationBooks").includes(
           this.props.currentBook.key
         ) ||
-        ConfigService.getReaderConfig("fullTranslationMode") === "no" ||
-        !this.props.isAuthed
+        ConfigService.getReaderConfig("fullTranslationMode") === "no"
       ) {
         return;
       }
 
+      const bookKey = this.props.currentBook.key;
       let batchTransTexts: string[] = await rendition.getBatchTransTexts();
       if (batchTransTexts && batchTransTexts.length > 0) {
-        let targetLang = getFullTranslationTarget();
+        const source = await createFullTranslation(getFullTranslationTarget());
+        const targetLang = source.cacheKey;
         let chapterDocIndex = "";
         if (typeof rendition.getPosition === "function") {
           chapterDocIndex = rendition.getPosition()?.chapterDocIndex || "";
@@ -225,7 +222,7 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
           chapterDocIndex = "0";
         }
         let cache = this.getTransCache(chapterDocIndex);
-        let translatedTexts: string[] = new Array(batchTransTexts.length);
+        let translatedTexts: string[] = new Array(batchTransTexts.length).fill(undefined);
         let pendingIndexes: number[] = [];
         let pendingTexts: string[] = [];
         batchTransTexts.forEach((text, index) => {
@@ -238,69 +235,30 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
           }
         });
         if (pendingTexts.length > 0) {
-          let res = await getBatchTrans(pendingTexts, "Automatic", targetLang);
-          if (res && res.data && res.data.texts) {
+          const texts = await source.translate(pendingTexts);
+          if (this.props.currentBook.key !== bookKey) return;
+          if (texts.length === pendingTexts.length) {
             pendingIndexes.forEach((index, i) => {
-              translatedTexts[index] = res.data.texts[i];
+              translatedTexts[index] = texts[i];
               if (!cache[targetLang]) {
                 cache[targetLang] = {};
               }
-              cache[targetLang][batchTransTexts[index]] = res.data.texts[i];
+              cache[targetLang][batchTransTexts[index]] = texts[i];
             });
             this.saveTransCache(chapterDocIndex, cache);
           }
         }
-        if (translatedTexts.every((text) => text !== undefined)) {
+        if (translatedTexts.every((text) => text !== undefined) &&
+          String(rendition.getPosition?.()?.chapterDocIndex ?? rendition.tempLocation?.chapterDocIndex ?? "0") === String(chapterDocIndex) &&
+          ConfigService.getReaderConfig("fullTranslationMode") !== "no") {
           rendition.handleBatchTransResult(batchTransTexts, translatedTexts);
         }
       }
     });
-    this.batchTranslationLock = next.catch(() => {});
-    return next;
+    this.batchTranslationLock = next.catch(error => { toast.error(error.message, { id: "full-translation" }); });
+    return this.batchTranslationLock;
   }
-  async handleWordDefinition(rendition) {
-    const prev = this.batchTranslationLock;
-    const next = prev.then(async () => {
-      if (
-        !ConfigService.getAllListConfig("wordDefinitionBooks").includes(
-          this.props.currentBook.key
-        ) ||
-        !this.props.isAuthed
-      ) {
-        return;
-      }
 
-      let wordTexts = await rendition.audioText();
-      if (wordTexts && wordTexts.length > 0) {
-        let lang = detectLocalLanguage(wordTexts.slice(0, 500).join(" "));
-        if (lang === "ko") {
-          toast.error(
-            this.props.t(
-              "Unsupported language for word definition, currently only Chinese, Japanese and English are supported"
-            )
-          );
-          return;
-        }
-        let currentLevel =
-          lang === "zh"
-            ? ConfigService.getReaderConfig("currentChineseLevel") || "HSK3"
-            : lang === "ja"
-              ? ConfigService.getReaderConfig("currentJapaneseLevel") || "N3"
-              : ConfigService.getReaderConfig("currentEnglishLevel") || "四级";
-        let res = await getWordDefinitions(wordTexts, currentLevel, lang);
-
-        if (res && res.data && res.data.results) {
-          rendition.handleWordDefinitionResult(
-            res.data.results,
-            lang,
-            ConfigService.getReaderConfig("lang")
-          );
-        }
-      }
-    });
-    this.batchTranslationLock = next.catch(() => {});
-    return next;
-  }
   async handlePageNum(rendition) {
     let pageInfo = await rendition.getProgress();
     if (!pageInfo) {
@@ -336,11 +294,11 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
               : "",
             width:
               !this.props.isNavLocked &&
-              !this.props.isSettingLocked &&
-              !this.props.isDockedRight
+                !this.props.isSettingLocked &&
+                !this.props.isDockedRight
                 ? "100%"
                 : this.props.isNavLocked &&
-                    (this.props.isSettingLocked || this.props.isDockedRight)
+                  (this.props.isSettingLocked || this.props.isDockedRight)
                   ? "calc(100% - 600px)"
                   : "calc(100% - 300px)",
             left: !this.props.isNavLocked ? "0" : "300px",
@@ -349,11 +307,9 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                 ? "0"
                 : "300px",
             backgroundColor: this.props.backgroundColor,
-            filter: `brightness(${
-              ConfigService.getReaderConfig("brightness") || 1
-            }) invert(${
-              ConfigService.getReaderConfig("isInvert") === "yes" ? 1 : 0
-            })`,
+            filter: `brightness(${ConfigService.getReaderConfig("brightness") || 1
+              }) invert(${ConfigService.getReaderConfig("isInvert") === "yes" ? 1 : 0
+              })`,
           }}
         >
           <div className="header-container">
@@ -363,9 +319,9 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                 style={
                   this.state.isSingle
                     ? {
-                        left: `calc(50vw - 
+                      left: `calc(50vw -
                       270px)`,
-                      }
+                    }
                     : {}
                 }
               >
@@ -380,9 +336,9 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                   style={
                     this.state.isSingle
                       ? {
-                          right: `calc(50vw - 
+                        right: `calc(50vw -
                       270px)`,
-                        }
+                      }
                       : {}
                   }
                 >
@@ -395,8 +351,8 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                   {this.state.currentTime}
                   {this.state.percentage
                     ? "  " +
-                      (parseFloat(this.state.percentage) * 100).toFixed(2) +
-                      "%"
+                    (parseFloat(this.state.percentage) * 100).toFixed(2) +
+                    "%"
                     : ""}
                 </span>
               </>
@@ -409,9 +365,9 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                 style={
                   this.state.isSingle
                     ? {
-                        left: `calc(50vw - 
+                      left: `calc(50vw -
                       270px)`,
-                      }
+                    }
                     : {}
                 }
               >
@@ -453,12 +409,12 @@ class PageWidget extends React.Component<PageWidgetProps, PageWidgetState> {
                   style={
                     this.props.textOrientation === "vertical"
                       ? {
-                          top: "50%",
-                          height: "1px",
-                          width: "calc(100% - 30px)",
-                          left: "15px",
-                          right: "15px",
-                        }
+                        top: "50%",
+                        height: "1px",
+                        width: "calc(100% - 30px)",
+                        left: "15px",
+                        right: "15px",
+                      }
                       : {}
                   }
                 ></div>

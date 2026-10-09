@@ -43,7 +43,7 @@ import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import * as Kookit from "../../assets/lib/kookit.min";
 import PopupRefer from "../../components/popups/popupRefer";
 import DatabaseService from "../../utils/storage/databaseService";
-import { getOcrResult, getOcrResultV2 } from "../../utils/request/reader";
+
 import { BookHelper } from "../../assets/lib/kookit.min";
 import { parseWithSystemOCR } from "../../utils/request/common";
 import { isElectron } from "react-device-detect";
@@ -298,13 +298,13 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         fullTranslationMode:
           ConfigService.getAllListConfig("fullTranslationBooks").includes(
             this.props.currentBook.key
-          ) && this.props.isAuthed
+          )
             ? ConfigService.getReaderConfig("fullTranslationMode")
             : "no",
         textOrientation: ConfigService.getReaderConfig("textOrientation"),
         isDarkMode:
           ConfigService.getReaderConfig("backgroundColor") ===
-          "rgba(44,47,49,1)"
+            "rgba(44,47,49,1)"
             ? "yes"
             : "no",
         backgroundColor: ConfigService.getReaderConfig("backgroundColor"),
@@ -326,7 +326,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         ),
         readingRulerBackgroundOpacity: parseFloat(
           ConfigService.getReaderConfig("readingRulerBackgroundOpacity") ||
-            "0.6"
+          "0.6"
         ),
         isEnableKoReaderSync:
           ConfigService.getReaderConfig("isEnableKoReaderSync") === "yes",
@@ -343,16 +343,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           this.props.currentBook
         ),
         externalWorker: {
-          recognize:
-            getDefaultOcrEngine(this.props.currentBook) === "system-ocr"
-              ? parseWithSystemOCR
-              : ConfigService.getReaderConfig(ocrLangKey) === "accurate"
-                ? getOcrResultV2
-                : getOcrResult,
+          recognize: parseWithSystemOCR,
         },
         ocrEngine: getDefaultOcrEngine(this.props.currentBook),
         serverRegion:
-          getServerRegion() === "china" && this.props.isAuthed
+          getServerRegion() === "china"
             ? "china"
             : "global",
         paraSpacingValue:
@@ -368,7 +363,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           BRUSH_COLORS[0],
         brushWidth: parseFloat(
           ConfigService.getReaderConfig("annotationBrushWidth") ||
-            BRUSH_WIDTHS[1] + ""
+          BRUSH_WIDTHS[1] + ""
         ),
         annotationStyle:
           ConfigService.getReaderConfig("annotationStyle") || "brush",
@@ -377,7 +372,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           HIGHLIGHTER_COLORS[0],
         highlighterWidth: parseFloat(
           ConfigService.getReaderConfig("annotationHighlighterWidth") ||
-            HIGHLIGHTER_WIDTHS[1] + ""
+          HIGHLIGHTER_WIDTHS[1] + ""
         ),
         highlighterOpacity: parseFloat(
           ConfigService.getReaderConfig("annotationHighlighterOpacity") || "0.4"
@@ -390,11 +385,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           BRUSH_COLORS[0],
         shapeWidth: parseFloat(
           ConfigService.getReaderConfig("annotationShapeWidth") ||
-            BRUSH_WIDTHS[1] + ""
+          BRUSH_WIDTHS[1] + ""
         ),
         eraserWidth: parseFloat(
           ConfigService.getReaderConfig("annotationEraserWidth") ||
-            ERASER_WIDTH_DEFAULT + ""
+          ERASER_WIDTH_DEFAULT + ""
         ),
         quickErase: ConfigService.getReaderConfig("annotationQuickErase") ||
           "no",
@@ -532,14 +527,14 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         chapterDocIndex =
           bookLocation.chapterTitle && this.props.htmlBook
             ? _.findLastIndex(
-                this.props.htmlBook.flattenChapters.map((item) => {
-                  item.label = item.label.trim();
-                  return item;
-                }),
-                {
-                  label: bookLocation.chapterTitle.trim(),
-                }
-              )
+              this.props.htmlBook.flattenChapters.map((item) => {
+                item.label = item.label.trim();
+                return item;
+              }),
+              {
+                label: bookLocation.chapterTitle.trim(),
+              }
+            )
             : 0;
       }
       this.props.handleCurrentChapter(chapter);
@@ -695,12 +690,12 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           />
         ) : null}
         {this.props.htmlBook &&
-        (this.props.isDockedRight ||
-          (this.props.isOpenMenu &&
-            (this.props.menuMode === "dict" ||
-              this.props.menuMode === "trans" ||
-              this.props.menuMode === "assistant" ||
-              this.props.menuMode === "note"))) ? (
+          (this.props.isDockedRight ||
+            (this.props.isOpenMenu &&
+              (this.props.menuMode === "dict" ||
+                this.props.menuMode === "trans" ||
+                this.props.menuMode === "assistant" ||
+                this.props.menuMode === "note"))) ? (
           <PopupBox
             {...({
               rendition: this.props.htmlBook.rendition,
@@ -723,42 +718,42 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         <div
           className={
             this.props.readerMode === "scroll" &&
-            !isReadingAidMode(
-              this.props.currentBook.format,
-              this.props.currentBook.key
-            )
+              !isReadingAidMode(
+                this.props.currentBook.format,
+                this.props.currentBook.key
+              )
               ? "html-viewer-page scrolling-html-viewer-page"
               : "html-viewer-page"
           }
           id="page-area"
           style={
             this.props.readerMode === "scroll" &&
-            document.body.clientWidth >= 570
+              document.body.clientWidth >= 570
               ? {
-                  // marginLeft: this.state.pageOffset,
-                  // marginRight: this.state.pageOffset,
-                  paddingLeft: "0px",
-                  paddingRight: "0px",
-                  left: this.state.pageOffset,
-                  width: this.state.pageWidth,
-                }
+                // marginLeft: this.state.pageOffset,
+                // marginRight: this.state.pageOffset,
+                paddingLeft: "0px",
+                paddingRight: "0px",
+                left: this.state.pageOffset,
+                width: this.state.pageWidth,
+              }
               : {
-                  left: this.state.pageOffset,
-                  width: this.state.pageWidth,
-                }
+                left: this.state.pageOffset,
+                width: this.state.pageWidth,
+              }
           }
         ></div>
         <PageWidget />
         {this.props.isHideBackground ||
-        this.props.textOrientation === "vertical" ||
-        this.props.isShowPageBorder ||
-        ((this.props.isParagraphMode ||
-          this.props.isReadingRuler ||
-          this.props.isSpeedReading) &&
-          !isReadingRawPDF(this.props.currentBook)) ||
-        this.props.isMergeWord ? null : this.props.currentBook.key ? (
-          <Background />
-        ) : null}
+          this.props.textOrientation === "vertical" ||
+          this.props.isShowPageBorder ||
+          ((this.props.isParagraphMode ||
+            this.props.isReadingRuler ||
+            this.props.isSpeedReading) &&
+            !isReadingRawPDF(this.props.currentBook)) ||
+          this.props.isMergeWord ? null : this.props.currentBook.key ? (
+            <Background />
+          ) : null}
       </>
     );
   }

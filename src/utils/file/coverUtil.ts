@@ -1,3 +1,4 @@
+import { canUseDataSource } from "../storage/dataSourcePolicy";
 import { isElectron } from "react-device-detect";
 import BookModel from "../../models/Book";
 import { getStorageLocation } from "../common";
@@ -11,7 +12,6 @@ import {
 } from "../../assets/lib/kookit-extra-browser.min";
 import { getCloudConfig } from "./common";
 import { LocalFileManager } from "./localFile";
-import TokenService from "../storage/tokenService";
 declare var window: any;
 class AsyncQueue {
   private queue: (() => Promise<void>)[] = [];
@@ -349,16 +349,15 @@ class CoverUtil {
           console.error("download cover failed");
           return;
         }
-        let base64 = `data:image/${
-          cover.split(".").reverse()[0]
-        };base64,${imgStr}`;
+        let base64 = `data:image/${cover.split(".").reverse()[0]
+          };base64,${imgStr}`;
         await this.saveCover(cover, base64);
       }
     }
   }
   static async uploadCover(cover: string) {
-    let isAuthed = await TokenService.getToken("is_authed");
-    if (isAuthed !== "yes") {
+
+    if (!canUseDataSource(ConfigService.getItem("defaultSyncOption"))) {
       return;
     }
     if (isElectron) {
@@ -460,8 +459,8 @@ class CoverUtil {
     }
   }
   static async deleteCloudCover(key: string) {
-    let isAuthed = await TokenService.getToken("is_authed");
-    if (isAuthed !== "yes") {
+
+    if (!canUseDataSource(ConfigService.getItem("defaultSyncOption"))) {
       return;
     }
     let coverList = await this.getCloudCoverList();

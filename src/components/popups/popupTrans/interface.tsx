@@ -5,7 +5,7 @@ export interface PopupTransProps {
   originalText: string;
   plugins: Plugin[];
   currentBook: BookModel;
-  isAuthed: boolean;
+
   isDockedRight: boolean;
   handleOpenMenu: (isOpenMenu: boolean) => void;
   handleMenuMode: (menu: string) => void;

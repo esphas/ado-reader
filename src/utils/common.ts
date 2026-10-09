@@ -1,4 +1,5 @@
-﻿import Plugin from "../models/Plugin";
+import { FORK_REPOSITORY } from "../constants/fork";
+import Plugin from "../models/Plugin";
 import { isElectron } from "react-device-detect";
 import CryptoJS from "crypto-js";
 import {
@@ -11,30 +12,22 @@ import Book from "../models/Book";
 import BookUtil from "./file/bookUtil";
 import * as Kookit from "../assets/lib/kookit.min";
 import DatabaseService from "./storage/databaseService";
-import packageJson from "../../package.json";
+
 import toast from "react-hot-toast";
 import i18n from "../i18n";
-import {
-  encryptToken,
-  getCloudSyncToken,
-  refreshThirdToken,
-} from "./request/thirdparty";
-import {
-  getCloudConfig,
-  getCloudToken,
-  removeCloudConfig,
-} from "./file/common";
+
+import { getCloudConfig } from "./file/common";
 import SyncService from "./storage/syncService";
 import localforage from "localforage";
 import { driveList } from "../constants/driveList";
-import { updateUserConfig } from "./request/user";
+
 import { languageCNMap, languageENMap } from "../constants/ttsList";
 import { BookHelper } from "../assets/lib/kookit.min";
 import {
   getOcrPaddleLangList,
   ocrTesseractLangList,
 } from "../constants/dropdownList";
-import TokenService from "./storage/tokenService";
+
 declare var window: any;
 export const supportedFormats = [
   ".epub",
@@ -82,7 +75,7 @@ export const calculateFileMD5 = (file: File): Promise<string> => {
               const arrayBuffer = event.target?.result as ArrayBuffer;
               resolve(
                 window.electronAPI?.crypto.md5(new Uint8Array(arrayBuffer)) ||
-                  ""
+                ""
               );
             };
             reader.onerror = (error) => reject(error);
@@ -121,7 +114,7 @@ export const vexPromptAsync = (message, placeholder = "", value = "") => {
       message,
       placeholder,
       value,
-      callback: function (input) {
+      callback: function(input) {
         resolve(input);
       },
     });
@@ -139,7 +132,7 @@ export const vexTextareaAsync = (message, value = "") => {
     window.vex.dialog.open({
       unsafeMessage: message ? i18n.t(message).replace(/\n/g, "<br>") : "",
       input: textareaHtml,
-      callback: function (data) {
+      callback: function(data) {
         if (!data) {
           resolve(false);
         } else {
@@ -178,22 +171,7 @@ export type KoodoExtensionInfo = {
   /** Extension version from chrome.runtime.getManifest().version, when known. */
   version?: string;
 };
-export const confirmBrowserExtensionAsync = async (): Promise<boolean> => {
-  const extensionInfo = await detectKoodoExtension();
-  if (extensionInfo.installed) {
-    return true;
-  }
-  const result = await vexComfirmAsync(
-    "Due to browser security restrictions, you may not be able to use this data source properly. If you encounter any issues, you can resolve them by installing our browser extension.",
-    "Confirm",
-    "Install extension"
-  );
-  if (!result) {
-    openExternalUrl(getWebsiteUrl() + getWebsiteLang() + "/use-extension");
-    return false;
-  }
-  return true;
-};
+
 export function detectKoodoExtension(
   timeoutMs = 500
 ): Promise<KoodoExtensionInfo> {
@@ -293,22 +271,22 @@ export const vexOpenAsync = (
       window.vex.dialog.buttons.NO,
       ...(tutorialUrl
         ? [
-            {
-              text: i18n.t("Tutorial"),
-              type: "button",
-              className: "vex-dialog-button-secondary",
-              click: function () {
-                openExternalUrl(tutorialUrl!);
-              },
+          {
+            text: i18n.t("Tutorial"),
+            type: "button",
+            className: "vex-dialog-button-secondary",
+            click: function() {
+              openExternalUrl(tutorialUrl!);
             },
-          ]
+          },
+        ]
         : []),
     ];
     window.vex.dialog.open({
       unsafeMessage: message ? i18n.t(message).replace(/\n/g, "<br>") : "",
       input: inputHtml,
       buttons,
-      callback: function (data) {
+      callback: function(data) {
         if (!data) {
           resolve(false);
         } else {
@@ -333,25 +311,25 @@ export const vexPasswordInputAsync = (
     window.vex.dialog.buttons.NO.text = i18n.t("Cancel");
     const inputHtml = confirmMessage
       ? [
-          `<div style="margin-bottom:10px">`,
-          `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(message)}</label>`,
-          `<input name="vex-pwd" type="password" style="width:100%" required />`,
-          `</div>`,
-          `<div style="margin-bottom:10px">`,
-          `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(confirmMessage)}</label>`,
-          `<input name="vex-pwd-confirm" type="password" style="width:100%" required />`,
-          `</div>`,
-        ].join("")
+        `<div style="margin-bottom:10px">`,
+        `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(message)}</label>`,
+        `<input name="vex-pwd" type="password" style="width:100%" required />`,
+        `</div>`,
+        `<div style="margin-bottom:10px">`,
+        `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(confirmMessage)}</label>`,
+        `<input name="vex-pwd-confirm" type="password" style="width:100%" required />`,
+        `</div>`,
+      ].join("")
       : [
-          `<div style="margin-bottom:10px">`,
-          `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(message)}</label>`,
-          `<input name="vex-pwd" type="password" style="width:100%" required />`,
-          `</div>`,
-        ].join("");
+        `<div style="margin-bottom:10px">`,
+        `<label style="display:block;margin-bottom:4px;font-weight:500">${i18n.t(message)}</label>`,
+        `<input name="vex-pwd" type="password" style="width:100%" required />`,
+        `</div>`,
+      ].join("");
     window.vex.dialog.open({
       input: inputHtml,
       overlayClassName: isNoOverlay ? "no-overlay" : "",
-      callback: function (data) {
+      callback: function(data) {
         if (!data) {
           resolve(false);
           return;
@@ -396,7 +374,7 @@ export const vexSelectAsync = (
     window.vex.dialog.open({
       unsafeMessage: i18n.t(message),
       input: selectHtml,
-      callback: function (data) {
+      callback: function(data) {
         if (!data) {
           resolve(false);
         } else {
@@ -474,7 +452,7 @@ export function throttle<T extends (...args: any[]) => void>(
   let lastCall = 0;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function (this: unknown, ...args: Parameters<T>) {
+  return function(this: unknown, ...args: Parameters<T>) {
     const now = Date.now();
     const invoke = () => {
       lastCall = Date.now();
@@ -634,7 +612,7 @@ export const getPageWidth = (
   };
   if (
     document.body.clientWidth * Math.abs(parseFloat(scale)) -
-      document.body.clientWidth * 0.4 >
+    document.body.clientWidth * 0.4 >
     document.body.clientWidth
   ) {
     let pageWidth = document.body.clientWidth - 106;
@@ -654,21 +632,19 @@ export const getPageWidth = (
       (isNavLocked ? 300 : 0) -
       (isSettingLocked ? 300 : 0);
     let width = findValidMultiple(preWidth);
-    pageOffset = `calc(50vw + ${isNavLocked ? 150 : 0}px - ${
-      isSettingLocked ? 150 : 0
-    }px - ${width / 2}px)`;
+    pageOffset = `calc(50vw + ${isNavLocked ? 150 : 0}px - ${isSettingLocked ? 150 : 0
+      }px - ${width / 2}px)`;
     pageWidth = width;
   } else if (readerMode === "double") {
     let width = findValidMultiple(
       document.body.clientWidth -
-        2 * margin -
-        80 -
-        (isNavLocked ? 300 : 0) -
-        (isSettingLocked ? 300 : 0)
+      2 * margin -
+      80 -
+      (isNavLocked ? 300 : 0) -
+      (isSettingLocked ? 300 : 0)
     );
-    pageOffset = `calc(50vw + ${isNavLocked ? 150 : 0}px - ${
-      isSettingLocked ? 150 : 0
-    }px - ${width / 2}px)`;
+    pageOffset = `calc(50vw + ${isNavLocked ? 150 : 0}px - ${isSettingLocked ? 150 : 0
+      }px - ${width / 2}px)`;
     pageWidth = width;
   }
   if (pageWidth > document.body.clientWidth) {
@@ -868,8 +844,8 @@ function triggerReactChange(id: string, value: string) {
     currentTarget: {
       value: value,
     },
-    preventDefault: () => {},
-    stopPropagation: () => {},
+    preventDefault: () => { },
+    stopPropagation: () => { },
   };
 
   // 获取 React 实例
@@ -933,7 +909,7 @@ export const getServerRegion = () => {
   return isUseCN ? "china" : "global";
 };
 export const getWebsiteUrl = () => {
-  return getServerRegion() === "china" ? CN_WEBSITE_URL : WEBSITE_URL;
+  return FORK_REPOSITORY;
 };
 export const getWebsiteLang = () => {
   const lang = ConfigService.getReaderConfig("lang") || "en";
@@ -1122,8 +1098,8 @@ export const testCORS = async (url: string) => {
         i18n.t(
           "This data source cannot be accessed from browser due to CORS policy. Please switch to another data source or CORS-enabled service provider."
         ) +
-          " " +
-          i18n.t("You can also use the desktop app to avoid this issue.")
+        " " +
+        i18n.t("You can also use the desktop app to avoid this issue.")
       );
     }
 
@@ -1242,19 +1218,19 @@ export const showTaskProgress = async (
       ) {
         toast.loading(
           i18n.t("Start Transferring Data") +
-            " (" +
-            stats.completed +
-            "/" +
-            stats.total +
-            ")" +
-            " (" +
-            i18n.t(
-              driveList.find(
-                (item) =>
-                  item.value === ConfigService.getItem("defaultSyncOption")
-              )?.label || ""
-            ) +
-            ")",
+          " (" +
+          stats.completed +
+          "/" +
+          stats.total +
+          ")" +
+          " (" +
+          i18n.t(
+            driveList.find(
+              (item) =>
+                item.value === ConfigService.getItem("defaultSyncOption")
+            )?.label || ""
+          ) +
+          ")",
           {
             id: "syncing",
             position: "bottom-center",
@@ -1270,19 +1246,19 @@ export const showTaskProgress = async (
       ) {
         toast.loading(
           i18n.t("Start Transferring Data") +
-            " (" +
-            stats.completed +
-            "/" +
-            stats.total +
-            ")" +
-            " (" +
-            i18n.t(
-              driveList.find(
-                (item) =>
-                  item.value === ConfigService.getItem("defaultSyncOption")
-              )?.label || ""
-            ) +
-            ")",
+          " (" +
+          stats.completed +
+          "/" +
+          stats.total +
+          ")" +
+          " (" +
+          i18n.t(
+            driveList.find(
+              (item) =>
+                item.value === ConfigService.getItem("defaultSyncOption")
+            )?.label || ""
+          ) +
+          ")",
           {
             id: "syncing",
             position: "bottom-center",
@@ -1367,68 +1343,7 @@ export const clearAllData = async () => {
   }
   await localforage.clear();
 };
-export const resetKoodoSync = async () => {
-  let encryptToken = await TokenService.getToken(
-    ConfigService.getItem("defaultSyncOption") + "_token"
-  );
-  await updateUserConfig({
-    is_enable_koodo_sync: "no",
-    default_sync_option: ConfigService.getItem("defaultSyncOption"),
-    default_sync_token: encryptToken || "",
-  });
-  setTimeout(() => {
-    updateUserConfig({
-      is_enable_koodo_sync: "yes",
-      default_sync_option: ConfigService.getItem("defaultSyncOption"),
-      default_sync_token: encryptToken || "",
-    });
-  }, 1000);
-};
-export const handleAutoCloudSync = async () => {
-  let syncRes = await getCloudSyncToken();
-  if (
-    syncRes.code === 200 &&
-    syncRes.data.default_sync_option &&
-    syncRes.data.default_sync_option !== "icloud" &&
-    syncRes.data.default_sync_option !== "folder" &&
-    syncRes.data.default_sync_token
-  ) {
-    let supportedSources = driveList
-      .filter((item) => {
-        if (isElectron) {
-          return item.support.includes("desktop");
-        } else {
-          return item.support.includes("browser");
-        }
-      })
-      .map((item) => item.value);
-    if (!supportedSources.includes(syncRes.data.default_sync_option)) {
-      return false;
-    }
-    if (
-      !isElectron &&
-      (syncRes.data.default_sync_option === "webdav" ||
-        syncRes.data.default_sync_option === "s3compatible")
-    ) {
-      return false;
-    }
-    ConfigService.setItem(
-      "defaultSyncOption",
-      syncRes.data.default_sync_option
-    );
-    ConfigService.setReaderConfig("isEnableKoodoSync", "yes");
-    await TokenService.setToken(
-      syncRes.data.default_sync_option + "_token",
-      syncRes.data.default_sync_token
-    );
-    ConfigService.setListConfig(
-      syncRes.data.default_sync_option,
-      "dataSourceList"
-    );
-    return true;
-  }
-  return false;
-};
+
 export const detectLocalLanguage = (text: string): string => {
   const chinesePattern = /[\u4e00-\u9fff\u3000-\u303f\uf900-\ufaff]/g;
   const japanesePattern = /[\u3040-\u309f\u30a0-\u30ff]/g;
@@ -1712,130 +1627,7 @@ export const getICloudDrivePath = () => {
   }
   return "";
 };
-export const prepareThirdConfig = async (service: string, config: any) => {
-  if (
-    service === "adrive" ||
-    service === "boxnet" ||
-    service === "dropbox" ||
-    service === "dubox" ||
-    service === "google" ||
-    service === "microsoft" ||
-    service === "microsoft_exp" ||
-    service === "google_exp" ||
-    service === "yandex" ||
-    service === "yiyiwu"
-  ) {
-    if (
-      config.access_token &&
-      config.expires_at > new Date().getTime() + 15 * 60 * 1000
-    ) {
-      return config;
-    }
 
-    // Get access token
-    let refreshToken = config.refresh_token;
-    let res = await refreshThirdToken(service, refreshToken);
-    //网络问题不移除数据源
-    if (res && res.code === 503) {
-      return {};
-    }
-    if (!res.data || !res.data.access_token) {
-      toast.error(
-        i18n.t(
-          "The authentication token for your data source is no longer valid, please reauthorize in the settings"
-        ),
-        {
-          id: "syncing",
-          duration: 6000,
-        }
-      );
-      let targetDrive = service;
-      await TokenService.setToken(targetDrive + "_token", "");
-      SyncService.removeSyncUtil(targetDrive);
-      removeCloudConfig(targetDrive);
-      if (isElectron) {
-        const ipcRenderer = window.electronAPI;
-        await ipcRenderer.invoke("cloud-close", {
-          service: targetDrive,
-        });
-      }
-      ConfigService.deleteListConfig(targetDrive, "dataSourceList");
-      if (targetDrive === ConfigService.getItem("defaultSyncOption")) {
-        ConfigService.removeItem("defaultSyncOption");
-      }
-      reloadManager();
-      return {};
-    }
-    if (
-      service === "adrive" ||
-      service === "boxnet" ||
-      service === "dubox" ||
-      service === "yiyiwu"
-    ) {
-      config.refresh_token = res.data.refresh_token;
-      config.access_token = res.data.access_token;
-      config.expires_at = new Date().getTime() + res.data.expires_in * 1000;
-    } else {
-      config.access_token = res.data.access_token;
-      config.expires_at = new Date().getTime() + res.data.expires_in * 1000;
-    }
-    let response: any = await encryptToken(service, config);
-    if (response.code === 200) {
-      if (
-        ConfigService.getReaderConfig("isEnableKoodoSync") === "yes" &&
-        ConfigService.getItem("defaultSyncOption") === service
-      ) {
-        let syncToken = await TokenService.getToken(service + "_token");
-        await updateUserConfig({
-          is_enable_koodo_sync: "yes",
-          default_sync_option: service,
-          default_sync_token: syncToken || "",
-        });
-      }
-    }
-    SyncService.removeSyncUtil(service);
-    removeCloudConfig(service);
-    if (isElectron) {
-      const ipcRenderer = window.electronAPI;
-      await ipcRenderer.invoke("cloud-close", {
-        service: service,
-      });
-    }
-
-    return config;
-  } else {
-    return config;
-  }
-};
-export const isTokenExpired = async (service: string): Promise<boolean> => {
-  let config = await getCloudToken(service);
-  if (!config) {
-    return false;
-  }
-
-  if (
-    service === "adrive" ||
-    service === "boxnet" ||
-    service === "dropbox" ||
-    service === "dubox" ||
-    service === "google" ||
-    service === "microsoft" ||
-    service === "microsoft_exp" ||
-    service === "google_exp" ||
-    service === "yandex" ||
-    service === "yiyiwu"
-  ) {
-    if (
-      config.access_token &&
-      config.expires_at > new Date().getTime() + 15 * 60 * 1000
-    ) {
-      return false;
-    }
-    return true;
-  } else {
-    return false;
-  }
-};
 export const langToName = (lang: string) => {
   let regionCode = lang.split("-")[1];
   let langCode = lang.split("-")[0];
@@ -1986,19 +1778,6 @@ export const getOcrLangList = (engine: string) => {
   let list: any[];
   if (engine === "tesseract") {
     list = ocrTesseractLangList;
-  } else if (engine === "official-ai-ocr") {
-    list = [
-      {
-        label: "General",
-        value: "general",
-        lang: "general",
-      },
-      {
-        label: "Accurate",
-        value: "accurate",
-        lang: "accurate",
-      },
-    ];
   } else if (engine === "system-ocr") {
     list = [
       {
@@ -2025,8 +1804,6 @@ export const getDefaultOcrLang = (engine: string, currentBook: any) => {
         (item) => item.lang === ConfigService.getReaderConfig("lang")
       )?.value || "chi_sim"
     );
-  } else if (engine === "official-ai-ocr") {
-    return "general";
   } else if (engine === "system-ocr") {
     return "auto";
   } else if (engine === "paddle") {
@@ -2254,26 +2031,7 @@ export const isReadingAidMode = (format: string, bookKey: string) => {
     !isReadingRawPDF
   );
 };
-export const getOfficialDictLang = () => {
-  const lang = ConfigService.getReaderConfig("lang");
-  if (lang.startsWith("zh")) {
-    return "chs";
-  } else if (lang.startsWith("ja")) {
-    return "jpn";
-  } else if (lang.startsWith("ko")) {
-    return "kor";
-  } else if (lang.startsWith("fr")) {
-    return "fra";
-  } else if (lang.startsWith("de")) {
-    return "deu";
-  } else if (lang.startsWith("es")) {
-    return "spa";
-  } else if (lang.startsWith("pt")) {
-    return "por";
-  } else {
-    return "eng";
-  }
-};
+
 export const getOcrCachePath = (
   bookKey: string,
   chapterDocIndex: string

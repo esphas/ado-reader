@@ -182,6 +182,6 @@ export const translate: TranslatePlugin = async (
   if (transRes.status === 200 && transRes.data.trans_result) {
     return transRes.data.trans_result[0].dst;
   } else {
-    return "Error happened";
+    throw new Error("Error happened");
   }
 };

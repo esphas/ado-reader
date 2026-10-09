@@ -1,4 +1,5 @@
 {
+  "Please reconfigure this data source to store its credentials locally": "请重新配置此数据源，以便在本机保存凭据",
   "Books": "全部图书",
   "Recent": "最近阅读",
   "Bookmarks": "我的书签",
@@ -1384,5 +1385,25 @@
   "Email & live-chat priority support": "邮件与实时聊天支持",
   "Reading ruler height (lines)": "阅读标尺高度（行）",
   "Reading ruler background opacity": "阅读标尺背景透明度",
-  "ISBN": "ISBN"
+  "ISBN": "ISBN",
+  "TODO: Cloud drive authorization is not available yet": "TODO：该网盘的独立授权与同步尚未接入",
+  "TODO: Multi-role speech awaits self-hosted AI support": "TODO：多角色朗读待验证自备 AI 方案",
+  "TODO: Inline word definitions are not available yet": "TODO：自动词义辅助尚未接入替代服务",
+  "TODO: Online metadata lookup is not available yet": "TODO：在线元数据检索尚未接入替代服务，可手工编辑",
+  "Please configure a title analysis model in Settings - AI": "请先在设置 → AI 中指定书名解析模型",
+  "Please configure an AI translation model in Settings - AI": "请先在设置 → AI 中指定翻译模型",
+  "Please select a text translation service in Settings - AI": "请先在设置 → AI 中选择可返回文本的全文翻译服务",
+  "The selected service returned no text": "所选服务未返回文本",
+  "This translation service cannot return text": "该翻译服务未返回有效译文",
+  "The selected translation service does not support this language": "所选翻译服务不支持该目标语言",
+  "AI title analysis model": "AI 书名解析模型",
+  "Full text translation service": "全文翻译服务",
+  "Use selected translation service": "使用当前选中的翻译服务",
+  "Please select a replacement service": "请选择替代服务",
+  "If this device has the correct library, reset its sync record, remove the KoodoReader/config folder from your storage, and sync again.": "如果本机书库正确，可重置本机同步记录，删除存储中的 KoodoReader/config 文件夹后重新同步。",
+  "A free fork of Koodo Reader. No account or subscription required.": "基于 Koodo Reader 的免费分支，无需账号或订阅。",
+  "Download releases manually": "手动下载发行版本",
+  "Upstream project": "上游项目",
+  "This data source requires a browser extension. Please use the desktop app for now.": "此数据源需要浏览器扩展，现阶段请使用桌面版。",
+  "Upstream plugin documentation": "上游插件文档"
 }

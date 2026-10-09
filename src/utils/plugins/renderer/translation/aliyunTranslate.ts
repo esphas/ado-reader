@@ -64,7 +64,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const targetLanguage = to || "zh";
 
   if (!accessKeyId || !accessKeySecret) {
-    return "Missing Alibaba Cloud accessKeyId or accessKeySecret";
+    throw new Error("Missing Alibaba Cloud accessKeyId or accessKeySecret");
   }
 
   const params: Record<string, string> = {
@@ -106,18 +106,18 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
     if (res.status === 200 && res.data) {
       if (res.data.Code && Number(res.data.Code) !== 200) {
-        return `${res.data.Code}: ${res.data.Message || "Request failed"}`;
+        throw new Error(`${res.data.Code}: ${res.data.Message || "Request failed"}`);
       }
       if (res.data.Data && res.data.Data.Translated) {
         return res.data.Data.Translated;
       }
       if (res.data.Message) {
-        return res.data.Message;
+        throw new Error(res.data.Message);
       }
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

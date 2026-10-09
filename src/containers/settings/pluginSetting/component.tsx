@@ -1,17 +1,10 @@
+import { FORK_HELP } from "../../../constants/fork";
 import React from "react";
 import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
-import _ from "underscore";
 
 import toast from "react-hot-toast";
-import {
-  getWebsiteLang,
-  getWebsiteUrl,
-  handleContextMenu,
-  openExternalUrl,
-  vexComfirmAsync,
-  vexOpenAsync,
-} from "../../../utils/common";
+import { handleContextMenu, openExternalUrl, vexComfirmAsync, vexOpenAsync } from "../../../utils/common";
 
 import DatabaseService from "../../../utils/storage/databaseService";
 import { ConfigService } from "../../../assets/lib/kookit-extra-browser.min";
@@ -80,7 +73,7 @@ class SettingDialog extends React.Component<
     this.setState({ availablePlugins: pluginList });
   };
   getPluginTutorialUrl = () =>
-    getWebsiteUrl() + getWebsiteLang() + "/plugin";
+    FORK_HELP;
   handleOpenAddNew = async (scrollToTop = false) => {
     if (window.electronAPI?.runtime?.windowsStore) {
       return;
@@ -328,7 +321,7 @@ class SettingDialog extends React.Component<
                   style={{ marginRight: "10px" }}
                   onClick={() => {
                     openExternalUrl(
-                      getWebsiteUrl() + getWebsiteLang() + "/plugin"
+                      FORK_HELP
                     );
                   }}
                 >
@@ -682,7 +675,7 @@ class SettingDialog extends React.Component<
                 }
               }}
             >
-              <Trans>How to custom plugin</Trans>
+              <Trans>Upstream plugin documentation</Trans>
             </span>
             <span
               style={{ marginLeft: "20px", fontWeight: "bold" }}

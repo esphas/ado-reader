@@ -9,7 +9,7 @@ export interface PageWidgetProps {
   isNavLocked: boolean;
   isSettingLocked: boolean;
   isDockedRight: boolean;
-  isAuthed: boolean;
+
   htmlBook: HtmlBookModel;
   isShowBookmark: boolean;
   isHideFooter: boolean;

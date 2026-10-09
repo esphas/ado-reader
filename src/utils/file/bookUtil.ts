@@ -1,3 +1,4 @@
+import { canUseDataSource } from "../storage/dataSourcePolicy";
 import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import { isElectron } from "react-device-detect";
 import localforage from "localforage";
@@ -12,7 +13,6 @@ import i18n from "../../i18n";
 import { getCloudConfig } from "./common";
 import CoverUtil from "./coverUtil";
 import { LocalFileManager } from "./localFile";
-import TokenService from "../storage/tokenService";
 declare var window: any;
 
 class BookUtil {
@@ -274,7 +274,7 @@ class BookUtil {
         position: "bottom-center",
       });
       if (
-        (await TokenService.getToken("is_authed")) === "yes" &&
+        canUseDataSource(ConfigService.getItem("defaultSyncOption")) &&
         (await this.isBookExistInCloud(book.key))
       ) {
         let timer = showDownloadProgress(
@@ -338,16 +338,14 @@ class BookUtil {
     if (isElectron) {
       if (ConfigService.getReaderConfig("isOpenInMain") === "yes") {
         window.electronAPI.invoke("new-tab", {
-          url: `${window.location.href.split("#")[0]}#/${ref}/${
-            book.key
-          }?title=${book.name}&file=${book.key}`,
+          url: `${window.location.href.split("#")[0]}#/${ref}/${book.key
+            }?title=${book.name}&file=${book.key}`,
         });
       } else {
         const ipcRenderer = window.electronAPI;
         ipcRenderer.invoke("open-book", {
-          url: `${window.location.href.split("#")[0]}#/${ref}/${
-            book.key
-          }?title=${book.name}&file=${book.key}`,
+          url: `${window.location.href.split("#")[0]}#/${ref}/${book.key
+            }?title=${book.name}&file=${book.key}`,
           isMergeWord: ConfigService.getReaderConfig("isMergeWord"),
           isAutoFullscreen: ConfigService.getReaderConfig("isAutoFullscreen"),
           isAutoMaximize: ConfigService.getReaderConfig("isAutoMaximize"),
@@ -357,8 +355,7 @@ class BookUtil {
       }
     } else {
       window.open(
-        `${window.location.href.split("#")[0]}#/${ref}/${book.key}?title=${
-          book.name
+        `${window.location.href.split("#")[0]}#/${ref}/${book.key}?title=${book.name
         }&file=${book.key}`
       );
     }
@@ -476,8 +473,8 @@ class BookUtil {
     if (key.startsWith("cache")) {
       return;
     }
-    let isAuthed = await TokenService.getToken("is_authed");
-    if (isAuthed !== "yes") {
+
+    if (!canUseDataSource(ConfigService.getItem("defaultSyncOption"))) {
       return;
     }
     let service = ConfigService.getItem("defaultSyncOption");
@@ -521,8 +518,8 @@ class BookUtil {
     }
   }
   static async deleteCloudBook(key: string, format: string) {
-    let isAuthed = await TokenService.getToken("is_authed");
-    if (isAuthed !== "yes") {
+
+    if (!canUseDataSource(ConfigService.getItem("defaultSyncOption"))) {
       return;
     }
     let service = ConfigService.getItem("defaultSyncOption");

@@ -1,4 +1,4 @@
-import { getStorageLocation, prepareThirdConfig } from "../common";
+import { getStorageLocation } from "../common";
 import CoverUtil from "./coverUtil";
 import {
   CommonTool,
@@ -105,7 +105,7 @@ export function getLoginParamsFromUrl() {
   return params;
 }
 export const upgradeStorage = async (
-  handleFinish: () => void = () => {}
+  handleFinish: () => void = () => { }
 ): Promise<Boolean> => {
   try {
     let dataPath = getStorageLocation() || "";
@@ -167,7 +167,7 @@ export const upgradeStorage = async (
     //upgrade plugin
     let plugins =
       ConfigService.getItem("pluginList") !== "{}" &&
-      ConfigService.getItem("pluginList")
+        ConfigService.getItem("pluginList")
         ? JSON.parse(ConfigService.getItem("pluginList") || "")
         : [];
     if (plugins.length > 0) {
@@ -297,10 +297,10 @@ export const getCloudConfig = (service: string): Promise<any> => {
     if (!config) {
       return {};
     }
-    return await prepareThirdConfig(service, config);
+    return config;
   });
   // 链上错误处理，避免一次失败阻断后续调用
-  cloudConfigLocks[service] = next.catch(() => {});
+  cloudConfigLocks[service] = next.catch(() => { });
   return next;
 };
 export const getCloudToken = async (service: string) => {
@@ -309,9 +309,10 @@ export const getCloudToken = async (service: string) => {
   } else {
     let result = await decryptToken(service);
     if (result.code !== 200) {
+      if (result.msg) throw new Error(result.msg);
       return null;
     }
-    let config = JSON.parse(result.data.token);
+    let config = JSON.parse(result.data!.token);
     configCache[service] = config;
     return config;
   }

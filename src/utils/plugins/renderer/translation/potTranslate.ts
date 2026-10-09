@@ -9,6 +9,6 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   if (res.data === "ok") {
     return "Pot is running"
   } else {
-    return "Error happened"
+    throw new Error("Error happened");
   }
 };

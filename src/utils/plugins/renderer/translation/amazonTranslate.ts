@@ -145,6 +145,6 @@ export const translate: TranslatePlugin = async (
   if (transRes.status === 200) {
     return transRes.data.TranslatedText;
   } else {
-    return "Error happened";
+    throw new Error("Error happened");
   }
 };

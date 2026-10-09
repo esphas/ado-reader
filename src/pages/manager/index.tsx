@@ -1,30 +1,5 @@
 import { connect } from "react-redux";
-import {
-  handleFetchBooks,
-  handleFetchPlugins,
-  handleFetchBookSortCode,
-  handleFetchNoteSortCode,
-  handleFetchViewMode,
-  handleDetailDialog,
-  handleLoadingDialog,
-  handleNewDialog,
-  handleShowSupport,
-  handleSetting,
-  handleLocalFileDialog,
-  handleImportDialog,
-  handleOPDSDialog,
-  handleAutoImportDialog,
-  handleFetchNotes,
-  handleFetchBookmarks,
-  handleEditDialog,
-  handleDeleteDialog,
-  handleAddDialog,
-  handleReadingState,
-  handleShowPopupNote,
-  handleSortShelfDialog,
-  handleShelf,
-  handleMode,
-} from "../../store/actions";
+import { handleFetchBooks, handleFetchPlugins, handleFetchBookSortCode, handleFetchNoteSortCode, handleFetchViewMode, handleDetailDialog, handleLoadingDialog, handleSetting, handleLocalFileDialog, handleImportDialog, handleOPDSDialog, handleAutoImportDialog, handleFetchNotes, handleFetchBookmarks, handleEditDialog, handleDeleteDialog, handleAddDialog, handleReadingState, handleShowPopupNote, handleSortShelfDialog, handleShelf, handleMode } from "../../store/actions";
 import { withTranslation } from "react-i18next";
 
 import "./manager.css";
@@ -40,15 +15,14 @@ const mapStateToProps = (state: stateType) => {
     shelfTitle: state.sidebar.shelfTitle,
     isOpenEditDialog: state.book.isOpenEditDialog,
     isDetailDialog: state.manager.isDetailDialog,
-    isAuthed: state.manager.isAuthed,
+
     isOpenDeleteDialog: state.book.isOpenDeleteDialog,
     isOpenAddDialog: state.book.isOpenAddDialog,
     isSettingOpen: state.manager.isSettingOpen,
     isAboutOpen: state.manager.isAboutOpen,
     isSortDisplay: state.manager.isSortDisplay,
     isShowLoading: state.manager.isShowLoading,
-    isShowNew: state.manager.isShowNew,
-    isShowSupport: state.manager.isShowSupport,
+
     isShowPopupNote: state.manager.isShowPopupNote,
     isOpenImportDialog: state.backupPage.isOpenImportDialog,
     isOpenOPDSDialog: state.backupPage.isOpenOPDSDialog,
@@ -72,8 +46,7 @@ const actionCreator = {
   handleDetailDialog,
   handleSortShelfDialog,
   handleLoadingDialog,
-  handleNewDialog,
-  handleShowSupport,
+
   handleLocalFileDialog,
   handleImportDialog,
   handleOPDSDialog,

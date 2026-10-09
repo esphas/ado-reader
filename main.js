@@ -20,7 +20,11 @@ const { pathToFileURL } = require("url");
 const isDev = require("electron-is-dev");
 const Store = require("electron-store");
 const log = require("electron-log/main");
+require("./src/utils/main/logging-util").installConsoleLogging(log);
 const os = require("os");
+// Keep development and packaged profiles separate from the upstream app.
+app.setName("Ado Reader");
+app.setPath("userData", path.join(app.getPath("appData"), "ado-reader"));
 const store = new Store();
 const fs = require("fs");
 const fsExtra = require("fs-extra");
@@ -111,11 +115,10 @@ let mainView;
 //multi tab
 // let mainViewList = []
 let readerWindowReadyToClose = false;
-let chatWindow;
+
 let dbConnection = {};
 let syncUtilCache = {};
 let pickerUtilCache = {};
-let downloadRequest = null;
 
 const RESIZE_THROTTLE_MS = 300;
 
@@ -209,7 +212,7 @@ if (process.platform != "darwin" && process.argv.length >= 2) {
   filePath = process.argv[1];
   // Check argv for a deep link URL (cold start)
   for (const arg of process.argv) {
-    if (arg.startsWith("koodo-reader://")) {
+    if (arg.startsWith("ado-reader://")) {
       pendingDeepLink = arg;
       break;
     }
@@ -258,7 +261,7 @@ if (!singleInstance) {
       mainWin.focus();
     }
     // Handle deep link passed via second-instance argv
-    const deepLink = argv.find((arg) => arg.startsWith("koodo-reader://"));
+    const deepLink = argv.find((arg) => arg.startsWith("ado-reader://"));
     if (deepLink) {
       if (deepLink === pendingDeepLink) {
         pendingDeepLink = null;
@@ -449,7 +452,7 @@ const createTray = () => {
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "Open Koodo Reader",
+      label: "Open Ado Reader",
       click: () => {
         if (mainWin) {
           mainWin.show();
@@ -465,7 +468,7 @@ const createTray = () => {
       },
     },
   ]);
-  tray.setToolTip("Koodo Reader");
+  tray.setToolTip("Ado Reader");
   tray.setContextMenu(contextMenu);
   tray.on("click", () => {
     if (mainWin) {
@@ -767,16 +770,7 @@ const createMainWin = () => {
       stream.on("end", () => resolve(hash.digest("hex")));
     });
   });
-  ipcMain.handle("cancel-download-app", (event, arg) => {
-    // Implement cancellation logic here
-    // Note: In this example, we are not keeping a reference to the request,
-    // so we cannot actually abort it. This is a placeholder for demonstration.
-    if (downloadRequest) {
-      downloadRequest.abort();
-      downloadRequest = null;
-    }
-    event.returnValue = "cancelled";
-  });
+
   // Discord RPC handlers
   ipcMain.handle("discord-rpc-update", async (event, config) => {
     await setDiscordActivity(config);
@@ -784,70 +778,7 @@ const createMainWin = () => {
   ipcMain.handle("discord-rpc-clear", async (event) => {
     await clearDiscordActivity();
   });
-  ipcMain.handle("update-win-app", (event, config) => {
-    let fileName = `koodo-reader-installer.exe`;
-    let supportedArchs = ["x64", "ia32", "arm64"];
-    //get system arch
-    let arch = os.arch();
-    if (!supportedArchs.includes(arch)) {
-      return;
-    }
 
-    let url = `https://dl.koodoreader.com/v${config.version}/Koodo-Reader-${config.version}-${arch}.exe`;
-    const https = require("https");
-    const { spawn } = require("child_process");
-    const file = fs.createWriteStream(path.join(app.getPath("temp"), fileName));
-    downloadRequest = https.get(url, (res) => {
-      const totalSize = parseInt(res.headers["content-length"], 10);
-      let downloadedSize = 0;
-      res.on("data", (chunk) => {
-        downloadedSize += chunk.length;
-        const progress = ((downloadedSize / totalSize) * 100).toFixed(2);
-        const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
-        const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-        mainWin.webContents.send("download-app-progress", {
-          progress,
-          downloadedMB,
-          totalMB,
-        });
-      });
-
-      res.pipe(file);
-      file.on("finish", () => {
-        console.info("\n下载完成！");
-        file.close();
-
-        let updateExePath = path.join(app.getPath("temp"), fileName);
-        if (!fs.existsSync(updateExePath)) {
-          console.error("更新包不存在:", updateExePath);
-          return;
-        }
-        // 验证文件可执行性
-        try {
-          fs.accessSync(updateExePath, fs.constants.X_OK);
-          console.info("更新包可执行性验证通过");
-        } catch (err) {
-          console.error("更新包不可执行:", err.message);
-          return;
-        }
-        try {
-          // 先退出应用，再启动安装程序，避免文件锁定导致覆盖安装失败
-          app.once("will-quit", () => {
-            const child = spawn(updateExePath, [], {
-              stdio: "ignore",
-              detached: true,
-              shell: true,
-              windowsHide: false,
-            });
-            child.unref();
-          });
-          app.quit();
-        } catch (err) {
-          console.error(`spawn 执行异常: ${err.message}`);
-        }
-      });
-    });
-  });
   ipcMain.handle("open-book", (event, config) => {
     let { url, isMergeWord, isAutoFullscreen, isAutoMaximize, isPreventSleep } =
       config;
@@ -1708,40 +1639,6 @@ const createMainWin = () => {
     }
   });
 
-  ipcMain.handle("new-chat", (event, config) => {
-    if (!chatWindow && mainWin) {
-      let bounds = mainWin.getBounds();
-      chatWindow = new BrowserWindow({
-        ...options,
-        width: 450,
-        height: bounds.height,
-        x: bounds.x + (bounds.width - 450),
-        y: bounds.y,
-        frame: true,
-        hasShadow: true,
-        transparent: false,
-        webPreferences: {
-          ...options.webPreferences,
-          nodeIntegration: false,
-          contextIsolation: true,
-          preload: path.join(__dirname, "chat-preload.js"),
-        },
-      });
-      chatWindow.loadURL(config.url);
-      chatWindow.on("close", (event) => {
-        chatWindow && chatWindow.destroy();
-        chatWindow = null;
-      });
-    } else if (chatWindow && !chatWindow.isDestroyed()) {
-      chatWindow.show();
-      chatWindow.focus();
-    }
-  });
-  ipcMain.on("chat-message", (event, msg) => {
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send("chat-message", msg);
-    }
-  });
   ipcMain.handle("clear-all-data", (event, config) => {
     store.clear();
   });
@@ -2090,39 +1987,7 @@ app.on("open-file", (e, pathToFile) => {
   filePath = pathToFile;
 });
 // Register protocol handler
-app.setAsDefaultProtocolClient("koodo-reader");
-const serializeArg = (arg) => {
-  if (arg === null) return "null";
-  if (arg === undefined) return "undefined";
-  if (typeof arg === "object") {
-    try {
-      return JSON.stringify(arg);
-    } catch {
-      return String(arg);
-    }
-  }
-  return String(arg);
-};
-const originalConsoleLog = console.log;
-console.log = function (...args) {
-  originalConsoleLog(...args); // 保留原日志
-  log.info(args.map(serializeArg).join(" ")); // 写入日志文件
-};
-const originalConsoleError = console.error;
-console.error = function (...args) {
-  originalConsoleError(...args); // 保留原错误日志
-  log.error(args.map(serializeArg).join(" ")); // 写入错误日志文件
-};
-const originalConsoleWarn = console.warn;
-console.warn = function (...args) {
-  originalConsoleWarn(...args); // 保留原警告日志
-  log.warn(args.map(serializeArg).join(" ")); // 写入警告日志文件
-};
-const originalConsoleInfo = console.info;
-console.info = function (...args) {
-  originalConsoleInfo(...args); // 保留原信息日志
-  log.info(args.map(serializeArg).join(" ")); // 写入信息日志文件
-};
+app.setAsDefaultProtocolClient("ado-reader");
 // Handle MacOS deep linking
 app.on("open-url", (event, url) => {
   event.preventDefault();
@@ -2133,7 +1998,7 @@ var lastDeepLinkAt = 0;
 const handleCallback = (url) => {
   try {
     // 检查 URL 是否有效
-    if (!url.startsWith("koodo-reader://")) {
+    if (!url.startsWith("ado-reader://")) {
       console.error("Invalid URL format:", url);
       return;
     }
@@ -2150,21 +2015,11 @@ const handleCallback = (url) => {
 
     // 解析 URL
     const parsedUrl = new URL(url);
-    const code = parsedUrl.searchParams.get("code");
-    const state = parsedUrl.searchParams.get("state");
-    const pickerData = parsedUrl.searchParams.get("pickerData");
 
     const bookKey = parsedUrl.searchParams.get("bookKey");
     const noteKey = parsedUrl.searchParams.get("noteKey");
     const importUrl = parsedUrl.searchParams.get("importUrl");
 
-    if (code && mainWin) {
-      mainWin.webContents.send("oauth-callback", { code, state });
-    }
-    if (pickerData && mainWin) {
-      let config = JSON.parse(decodeURIComponent(pickerData));
-      mainWin.webContents.send("picker-finished", config);
-    }
     if (bookKey && mainWin) {
       if (mainWin.isMinimized()) mainWin.restore();
       mainWin.show();

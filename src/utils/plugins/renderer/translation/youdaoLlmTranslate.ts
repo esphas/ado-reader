@@ -97,7 +97,7 @@ function parseStreamResult(rawText, streamType) {
   }
 
   if (lastError) {
-    return lastError;
+    throw new Error(lastError);
   }
 
   return streamType === "increment" ? incremental : latestFull;
@@ -119,7 +119,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
       : "0";
 
   if (!appKey || !appSecret) {
-    return "Missing Youdao appKey or appSecret";
+    throw new Error("Missing Youdao appKey or appSecret");
   }
 
   const params: Record<string, string> = {
@@ -170,11 +170,11 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
     }
 
     if (!response.ok) {
-      return `${response.status}: ${response.statusText || "Request failed"}`;
+      throw new Error(`${response.status}: ${response.statusText || "Request failed"}`);
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

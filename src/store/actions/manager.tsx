@@ -1,28 +1,19 @@
-import {
-  ConfigService,
-  KookitConfig,
-} from "../../assets/lib/kookit-extra-browser.min";
+import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import BookModel from "../../models/Book";
+
 import PluginModel from "../../models/Plugin";
 import { Dispatch } from "redux";
 import DatabaseService from "../../utils/storage/databaseService";
-import {
-  fetchUserInfo,
-  getUserRequest,
-  resetUserRequest,
-} from "../../utils/request/user";
+
 import {
   officialDictList,
   officialTranList,
 } from "../../constants/settingList";
 import toast from "react-hot-toast";
 import BookUtil from "../../utils/file/bookUtil";
-import i18n from "../../i18n";
-import { langToName } from "../../utils/common";
-import { resetReaderRequest } from "../../utils/request/reader";
-import { resetThirdpartyRequest } from "../../utils/request/thirdparty";
+
 import DictUtil from "../../utils/file/dictUtil";
-import TokenService from "../../utils/storage/tokenService";
+
 import { resolveStoredPlugin } from "../../utils/plugins/records";
 
 export function handleBooks(books: BookModel[]) {
@@ -43,9 +34,7 @@ export function handleSearch(isSearch: boolean) {
 export function handleRefreshBookCover(key: string) {
   return { type: "HANDLE_REFRESH_BOOK_COVER", payload: key };
 }
-export function handleUserInfo(userInfo: any) {
-  return { type: "HANDLE_USER_INFO", payload: userInfo };
-}
+
 export function handleDetailDialog(isDetailDialog: boolean) {
   return { type: "HANDLE_DETAIL_DIALOG", payload: isDetailDialog };
 }
@@ -75,27 +64,19 @@ export function handleSortDisplay(isSortDisplay: boolean) {
 export function handleLoadingDialog(isShowLoading: boolean) {
   return { type: "HANDLE_SHOW_LOADING", payload: isShowLoading };
 }
-export function handleNewDialog(isShowNew: boolean) {
-  return { type: "HANDLE_SHOW_NEW", payload: isShowNew };
-}
+
 export function handleSelectBook(isSelectBook: boolean) {
   return { type: "HANDLE_SELECT_BOOK", payload: isSelectBook };
 }
 export function handleSelectedBooks(selectedBooks: string[]) {
   return { type: "HANDLE_SELECTED_BOOKS", payload: selectedBooks };
 }
-export function handleNewWarning(isNewWarning: boolean) {
-  return { type: "HANDLE_NEW_WARNING", payload: isNewWarning };
-}
-export function handleShowSupport(isShowSupport: boolean) {
-  return { type: "HANDLE_SHOW_SUPPORT", payload: isShowSupport };
-}
+
+
 export function handleLoadMore(isLoadMore: boolean) {
   return { type: "HANDLE_LOAD_MORE", payload: isLoadMore };
 }
-export function handleAuthed(isAuthed: boolean) {
-  return { type: "HANDLE_AUTHED", payload: isAuthed };
-}
+
 export function handleBookSortCode(bookSortCode: {
   sort: number;
   order: number;
@@ -165,7 +146,7 @@ export function handleFetchBooks() {
       for (let obj in durationObj) {
         sortable.push([obj, durationObj[obj]]);
       }
-      sortable.sort(function (a, b) {
+      sortable.sort(function(a, b) {
         return a[1] - b[1];
       });
       let recentBookLKeys = Object.keys(durationObj) || [];
@@ -187,7 +168,7 @@ export function handleFetchBooks() {
       for (let obj in locationObj) {
         sortable.push([obj, locationObj[obj].percentage || 0]);
       }
-      sortable.sort(function (a, b) {
+      sortable.sort(function(a, b) {
         return b[1] - a[1];
       });
       let recentBookLKeys = sortable.map((item) => item[0]) || [];
@@ -222,64 +203,10 @@ export function handleFetchBooks() {
     // });
   };
 }
-export function handleFetchUserInfo() {
-  return async (dispatch: Dispatch) => {
-    let response = await fetchUserInfo();
-    let userInfo: any = null;
-    if (response.code === 200) {
-      userInfo = response.data;
-      ConfigService.setReaderConfig(
-        "isEnableKoodoSync",
-        userInfo.is_enable_koodo_sync || "no"
-      );
-      if (
-        userInfo.is_enable_koodo_sync === "yes" &&
-        userInfo.default_sync_option &&
-        userInfo.default_sync_token
-      ) {
-        if (
-          ConfigService.getItem("defaultSyncOption") ===
-          userInfo.default_sync_option
-        ) {
-          let encryptedToken = await TokenService.getToken(
-            userInfo.default_sync_option + "_token"
-          );
-          if (encryptedToken !== userInfo.default_sync_token) {
-            await TokenService.setToken(
-              userInfo.default_sync_option + "_token",
-              userInfo.default_sync_token
-            );
-          }
-        }
-      }
-    }
-    if (
-      userInfo &&
-      userInfo.valid_until < parseInt(new Date().getTime() / 1000 + "")
-    ) {
-      dispatch(handleShowSupport(true));
-    }
-    if (userInfo && userInfo.valid_until && userInfo.token_valid_until) {
-      if (
-        userInfo.valid_until > 0 &&
-        userInfo.token_valid_until > 0 &&
-        userInfo.valid_until > userInfo.token_valid_until
-      ) {
-        let userRequest = await getUserRequest();
-        await userRequest.refreshUserToken();
-        resetReaderRequest();
-        resetUserRequest();
-        resetThirdpartyRequest();
-      }
-    }
 
-    dispatch(handleUserInfo(userInfo));
-    return userInfo;
-  };
-}
 export function handleFetchPlugins() {
   return async (dispatch: Dispatch) => {
-    DatabaseService.getAllRecords("plugins").then(async (pluginList) => {
+    return DatabaseService.getAllRecords("plugins").then(async (pluginList) => {
       try {
         // Migrate legacy AI model entries from DB to ConfigService
         const legacyAiPlugins = pluginList.filter(
@@ -306,7 +233,7 @@ export function handleFetchPlugins() {
           pluginList.map((plugin) => resolveStoredPlugin(plugin))
         );
         pluginList = resolvedPlugins.filter((plugin): plugin is PluginModel =>
-          Boolean(plugin)
+          Boolean(plugin) && !plugin.key.startsWith("official-")
         );
 
         // Load local dictionary plugins from ConfigService
@@ -403,123 +330,8 @@ export function handleFetchPlugins() {
             pluginList.push(assistPlugin);
           }
         }
-        if (ConfigService.getReaderConfig("isDisableAI") !== "yes") {
-          // 官方 AI 插件始终展示（不依赖登录），选择时再判断是否升级
-          let dictPlugin = new PluginModel(
-            "official-ai-dict-plugin",
-            "dictionary",
-            "Official AI Dictionary",
-            "dict",
-            "1.0.0",
-            "",
-            {},
-            officialDictList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(dictPlugin);
-          let transPlugin = new PluginModel(
-            "official-ai-trans-plugin",
-            "translation",
-            "Official AI Translation",
-            "translation",
-            "1.0.0",
-            "",
-            {},
-            officialTranList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(transPlugin);
-          let sumPlugin = new PluginModel(
-            "official-ai-assistant-plugin",
-            "assistant",
-            "Official AI Assistant",
-            "assistant",
-            "1.0.0",
-            "",
-            {},
-            officialTranList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(sumPlugin);
-        }
-        const isAuthed = (await TokenService.getToken("is_authed")) === "yes";
-        if (ConfigService.getReaderConfig("isDisableAI") !== "yes") {
-          // 官方 AI 语音始终展示（不依赖登录），选择时再判断是否升级
-          let sortedVoiceList = [
-            ...KookitConfig.OfficialVoiceList.map((item) => {
-              return {
-                ...item,
-                label:
-                  i18n.t("Kokoro") +
-                  " - " +
-                  (KookitConfig.SelfHostedVoiceList.includes(item.name) &&
-                  isAuthed
-                    ? i18n.t("Limited free") + " - "
-                    : "") +
-                  item.displayName +
-                  " - " +
-                  item.language +
-                  " - " +
-                  (item.gender === "female"
-                    ? i18n.t("Female voice")
-                    : i18n.t("Male voice")),
-              };
-            }),
-            ...KookitConfig.AzureTTSVoiceList.map((item) => {
-              return {
-                ...item,
-                label:
-                  "Azure" +
-                  " - " +
-                  (KookitConfig.SelfHostedVoiceList.includes(item.name) &&
-                  isAuthed
-                    ? i18n.t("Limited free") + " - "
-                    : "") +
-                  item.displayName +
-                  " - " +
-                  langToName(item.locale) +
-                  " - " +
-                  (item.gender === "female"
-                    ? i18n.t("Female voice")
-                    : i18n.t("Male voice")),
-              };
-            }),
-          ];
-          let voicePlugin = new PluginModel(
-            "official-ai-voice-plugin",
-            "voice",
-            "Official AI Voice",
-            "speaker",
-            "1.0.0",
-            "",
-            {},
-            {},
-            sortedVoiceList.map((item: any) => {
-              return {
-                ...item,
-                plugin: "official-ai-voice-plugin",
-                config: {},
-                displayName: item.label,
-              };
-            }),
-            "",
-            ""
-          );
-          pluginList.push(voicePlugin);
-        }
-        TokenService.getToken("is_authed").then((value) => {
-          let isAuthed = value === "yes";
-          if (isAuthed && !ConfigService.getItem("serverRegion")) {
-            ConfigService.setItem("serverRegion", "global");
-          }
-          dispatch(handlePlugins(pluginList));
-        });
+
+        dispatch(handlePlugins(pluginList));
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -529,21 +341,7 @@ export function handleFetchPlugins() {
     });
   };
 }
-export function handleFetchAuthed() {
-  return (dispatch: Dispatch) => {
-    try {
-      TokenService.getToken("is_authed").then((value) => {
-        let isAuthed = value === "yes";
-        if (isAuthed && !ConfigService.getItem("serverRegion")) {
-          ConfigService.setItem("serverRegion", "global");
-        }
-        dispatch(handleAuthed(isAuthed));
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-}
+
 export function handleFetchBookSortCode() {
   return (dispatch: Dispatch) => {
     let bookSortCode = JSON.parse(

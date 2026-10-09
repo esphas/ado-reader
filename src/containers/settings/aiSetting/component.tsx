@@ -26,6 +26,8 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
       testResult: "",
       fetchedModels: [],
       isFetchingModels: false,
+      aiTitleModel: ConfigService.getReaderConfig("aiTitleModel") || "",
+      fullTranslationService: ConfigService.getReaderConfig("fullTranslationService") || "",
       aiTranslateModel: ConfigService.getReaderConfig("aiTranslateModel") || "",
       aiDictModel: ConfigService.getReaderConfig("aiDictModel") || "",
       aiAssistanceModel:
@@ -178,7 +180,7 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
 
   handleTest = async () => {
     const { endpoint, modelId, apiKey } = this.state;
-    if (!endpoint || !modelId || !apiKey) {
+    if (!endpoint || !modelId) {
       toast.error(this.props.t("Please fill in all required fields"));
       return;
     }
@@ -192,7 +194,7 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
         "POST",
         {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
         },
         JSON.stringify({
           model: modelId,
@@ -231,7 +233,7 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
       isEditing,
       editingKey,
     } = this.state;
-    if (!endpoint || !modelName || !modelId || !apiKey) {
+    if (!endpoint || !modelName || !modelId) {
       toast.error(this.props.t("Please fill in all required fields"));
       return;
     }
@@ -268,6 +270,7 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
   handleDelete = (key: string) => {
     try {
       ConfigService.deleteObjectConfig(key, "aiModelConfig");
+      if (this.state.aiTitleModel === key) { ConfigService.setReaderConfig("aiTitleModel", ""); this.setState({ aiTitleModel: "" }); }
       // 如果被删除的模型正被某个功能使用，则清空对应配置
       if (this.state.aiTranslateModel === key) {
         this.setState({ aiTranslateModel: "" });
@@ -733,6 +736,22 @@ class AISetting extends React.Component<SettingInfoProps, SettingInfoState> {
           </select>
         </div>
 
+        <div className="setting-dialog-new-title">
+          <Trans>AI title analysis model</Trans>
+          <select className="lang-setting-dropdown" value={this.state.aiTitleModel}
+            onChange={e => { this.setState({ aiTitleModel: e.target.value }); ConfigService.setReaderConfig("aiTitleModel", e.target.value); }}>
+            <option value="">{this.props.t("Please select")}</option>
+            {aiModels.map(item => <option key={item.key} value={item.key}>{item.displayName}</option>)}
+          </select>
+        </div>
+        <div className="setting-dialog-new-title">
+          <Trans>Full text translation service</Trans>
+          <select className="lang-setting-dropdown" value={this.state.fullTranslationService}
+            onChange={e => { this.setState({ fullTranslationService: e.target.value }); ConfigService.setReaderConfig("fullTranslationService", e.target.value); }}>
+            <option value="">{this.props.t("Use selected translation service")}</option>
+            {this.props.plugins.filter(p => p.type === "translation" && !p.key.startsWith("official-") && !p.key.includes("-embed-")).map(item => <option key={item.key} value={item.key}>{this.props.t(item.displayName)}</option>)}
+          </select>
+        </div>
         <div className="setting-dialog-new-plugin">
           <span
             style={{ fontWeight: "bold" }}

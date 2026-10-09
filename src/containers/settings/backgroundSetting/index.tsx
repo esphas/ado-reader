@@ -6,7 +6,7 @@ import { handleReaderBackgroundImage } from "../../../store/actions/reader";
 import { stateType } from "../../../store";
 
 const mapStateToProps = (state: stateType) => {
-  return { isAuthed: state.manager.isAuthed };
+  return {};
 };
 const actionCreator = { handleReaderBackgroundImage };
 export default connect(

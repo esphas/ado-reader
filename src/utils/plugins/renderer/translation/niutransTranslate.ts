@@ -173,7 +173,7 @@ function md5(str) {
 function buildAuthString(params, apiKey) {
   var signingParams: Record<string, string> = {};
 
-  Object.keys(params).forEach(function (key) {
+  Object.keys(params).forEach(function(key) {
     var value = params[key];
     if (value !== undefined && value !== null && value !== "") {
       signingParams[key] = value;
@@ -184,7 +184,7 @@ function buildAuthString(params, apiKey) {
 
   return Object.keys(signingParams)
     .sort()
-    .map(function (key) {
+    .map(function(key) {
       return key + "=" + signingParams[key];
     })
     .join("&");
@@ -206,7 +206,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   };
 
   if (!apiKey || !appId) {
-    return "Missing NiuTrans apiKey or appId";
+    throw new Error("Missing NiuTrans apiKey or appId");
   }
 
   if (config && config.termLibraryId) {
@@ -221,7 +221,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
   try {
     var body = new URLSearchParams();
-    Object.keys(params).forEach(function (key) {
+    Object.keys(params).forEach(function(key) {
       body.append(key, params[key]);
     });
 
@@ -233,18 +233,18 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
     if (res.status === 200 && res.data) {
       if (res.data.errorCode && res.data.errorCode !== "0") {
-        return res.data.errorCode + ": " + (res.data.errorMsg || "Request failed");
+        throw new Error(res.data.errorCode + ": " + (res.data.errorMsg || "Request failed"));
       }
       if (typeof res.data.tgtText === "string") {
         return res.data.tgtText;
       }
       if (res.data.errorMsg) {
-        return res.data.errorMsg;
+        throw new Error(res.data.errorMsg);
       }
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

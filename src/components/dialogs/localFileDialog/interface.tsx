@@ -6,7 +6,7 @@ export interface LocalFileDialogProps extends RouteComponentProps<any> {
   t: (title: string) => string;
   handleLoadingDialog: (isShowLoading: boolean) => void;
   handleFetchBooks: () => void;
-  isAuthed: boolean;
+
 }
 export interface LocalFileDialogState {
   isFinish: boolean;

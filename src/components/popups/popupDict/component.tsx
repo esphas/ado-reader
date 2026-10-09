@@ -11,18 +11,10 @@ import DOMPurify from "dompurify";
 import axios from "axios";
 import DictHistory from "../../../models/DictHistory";
 import { Trans } from "react-i18next";
-import {
-  getFullTranslationTarget,
-  getOfficialDictLang,
-  getWebsiteUrl,
-  openExternalUrl,
-} from "../../../utils/common";
+import { getFullTranslationTarget, getWebsiteUrl, openExternalUrl } from "../../../utils/common";
 import toast from "react-hot-toast";
 import DatabaseService from "../../../utils/storage/databaseService";
-import {
-  getDictText,
-  getDictionaryStream,
-} from "../../../utils/request/reader";
+
 import { chatStream } from "../../../utils/request/common";
 import { marked } from "marked";
 import { getIframeDoc } from "../../../utils/reader/docUtil";
@@ -90,28 +82,7 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
     if (ConfigService.getReaderConfig("isLemmatizeWord") === "yes") {
       originalText = originalText;
     }
-    if (!this.state.dictService) {
-      let pluginList = this.props.plugins.filter(
-        (item) =>
-          item.type === "dictionary" && !item.key.startsWith("official-ai-")
-      );
-      if (pluginList.length > 0) {
-        this.setState({
-          dictService: pluginList[0].key,
-        });
-        ConfigService.setReaderConfig("dictService", pluginList[0].key);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      } else if (this.props.isAuthed) {
-        this.setState({
-          dictService: "official-ai-dict-plugin",
-          isAddNew: false,
-        });
-        ConfigService.setReaderConfig("dictService", "official-ai-dict-plugin");
-      } else {
-        this.setState({ isAddNew: true });
-        return;
-      }
-    }
+    if (!this.state.dictService) { toast(this.props.t("Please select a replacement service")); this.setState({ isAddNew: !this.props.plugins.some(p => p.type === "dictionary") }); }
     const dictText = await this.handleDict(originalText);
     this.handleRecordHistory(
       originalText,
@@ -142,7 +113,6 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
 
   handleDict = async (text: string): Promise<string> => {
     let dictText = "";
-    let isFullAnalysis = true;
     try {
       if (
         ConfigService.getReaderConfig("dictService") === "custom-ai-dict-plugin"
@@ -206,23 +176,7 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
         if (!dictId) return "";
         dictText = await DictUtil.lookupWord(dictId, text);
       } else if (
-        this.props.isAuthed &&
-        ConfigService.getReaderConfig("isDisableAI") !== "yes" &&
-        ConfigService.getReaderConfig("dictService") ===
-          "official-ai-dict-plugin"
-      ) {
-        dictText = await getDictText(
-          text,
-          ConfigService.getReaderConfig("dictTarget") || "auto",
-          getOfficialDictLang()
-        );
-        if (dictText) {
-          isFullAnalysis = false;
-        }
-      } else if (
-        ConfigService.getReaderConfig("dictService") &&
-        ConfigService.getReaderConfig("dictService") !==
-          "official-ai-dict-plugin"
+        ConfigService.getReaderConfig("dictService")
       ) {
         let plugin = this.props.plugins.find(
           (item) => item.key === ConfigService.getReaderConfig("dictService")
@@ -275,20 +229,13 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
           }
         );
       }
-      if (
-        this.props.isAuthed &&
-        ConfigService.getReaderConfig("isDisableAI") !== "yes" &&
-        ConfigService.getReaderConfig("dictService") ===
-          "official-ai-dict-plugin"
-      ) {
-        this.handleDictionaryStream(text, isFullAnalysis);
-      }
+
       return dictText;
     } catch (error) {
       toast.error(
         this.props.t("Error happened") +
-          ": " +
-          (error instanceof Error ? error.message : String(error))
+        ": " +
+        (error instanceof Error ? error.message : String(error))
       );
       console.error(error);
       this.setState({
@@ -298,45 +245,9 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
       return "";
     }
   };
-  handleDictionaryStream = async (text: string, isFullAnalysis: boolean) => {
-    try {
-      this.aiTextAccumulator = "";
-      this.setState({ aiAnswer: "", isAiWaiting: true, isAiStreaming: true });
-      this.startUpdateInterval();
-      let res = await getDictionaryStream(
-        text,
-        "auto",
-        getFullTranslationTarget(),
-        this.props.originalSentence,
-        isFullAnalysis,
-        (result) => {
-          if (result && result.text) {
-            if (!this.aiTextAccumulator) {
-              this.setState({ isAiWaiting: false });
-            }
-            this.aiTextAccumulator += result.text;
-          }
-        }
-      );
-      this.stopUpdateInterval();
-      this.aiTextAccumulator = "";
-      if (res && res.done) {
-        this.setState({ isAiWaiting: false, isAiStreaming: false });
-      }
-    } catch (error) {
-      this.stopUpdateInterval();
-      this.aiTextAccumulator = "";
-      this.setState({ isAiWaiting: false, isAiStreaming: false });
-      console.error(error);
-    }
-  };
+
   handleChangeDictService = (dictService: string) => {
-    if (dictService === "official-ai-dict-plugin" && !this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
+
     this.setState(
       {
         dictService: dictService,
@@ -365,11 +276,11 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
           style={
             this.props.isDockedRight
               ? {
-                  paddingLeft: 15,
-                  paddingRight: 15,
-                  height: "calc(100% - 65px)",
-                  width: "calc(100% - 30px)",
-                }
+                paddingLeft: 15,
+                paddingRight: 15,
+                height: "calc(100% - 65px)",
+                width: "calc(100% - 30px)",
+              }
               : { height: "calc(100% - 65px)" }
           }
         >
@@ -406,12 +317,7 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
                       className="add-dialog-shelf-list-option"
                     >
                       {this.props.t(item.displayName)}
-                      {item.key === "official-ai-dict-plugin" && (
-                        <span style={{ fontSize: "13px", color: "#f16464" }}>
-                          {" "}
-                          (Pro)
-                        </span>
-                      )}
+
                     </option>
                   );
                 })}
@@ -516,7 +422,7 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
                   this.state.dictText + "<address></address>"
                 ) || " ",
                 {
-                  replace: (_domNode) => {},
+                  replace: (_domNode) => { },
                 }
               )}
               {(this.state.isAiWaiting || this.state.aiAnswer) && (
@@ -535,10 +441,10 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
                       {Parser(
                         DOMPurify.sanitize(
                           (marked.parse(this.state.aiAnswer) as string) +
-                            "<address></address>"
+                          "<address></address>"
                         ) || " ",
                         {
-                          replace: (_domNode) => {},
+                          replace: (_domNode) => { },
                         }
                       )}
                     </div>
@@ -546,12 +452,12 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
                   {!this.state.isAiWaiting &&
                     !this.state.isAiStreaming &&
                     this.state.aiAnswer && (
-                    <div className="popup-assist-disclaimer">
-                      {this.props.t(
-                        "AI-generated content is for reference only. Please verify carefully as it does not constitute professional advice."
-                      )}
-                    </div>
-                  )}
+                      <div className="popup-assist-disclaimer">
+                        {this.props.t(
+                          "AI-generated content is for reference only. Please verify carefully as it does not constitute professional advice."
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
             </div>

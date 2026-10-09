@@ -1,3 +1,4 @@
+import { FORK_HELP } from "../../../constants/fork";
 import React from "react";
 import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
@@ -8,43 +9,21 @@ import _ from "underscore";
 import { syncSettingList } from "../../../constants/settingList";
 
 import toast from "react-hot-toast";
-import {
-  confirmBrowserExtensionAsync,
-  detectKoodoExtension,
-  generateSyncRecord,
-  getICloudDrivePath,
-  getServerRegion,
-  getWebsiteLang,
-  getWebsiteUrl,
-  handleContextMenu,
-  openExternalUrl,
-  openInBrowser,
-  resetKoodoSync,
-  showTaskProgress,
-  testConnection,
-  testCORS,
-  vexComfirmAsync,
-} from "../../../utils/common";
+import { detectKoodoExtension, generateSyncRecord, getICloudDrivePath, handleContextMenu, openExternalUrl, openInBrowser, showTaskProgress, testConnection, testCORS, vexComfirmAsync } from "../../../utils/common";
 
 import { driveInputConfig, driveList } from "../../../constants/driveList";
 import { backup } from "../../../utils/file/backup";
 import { restore } from "../../../utils/file/restore";
-import {
-  ConfigService,
-  KookitConfig,
-  SyncHelper,
-  SyncUtil,
-} from "../../../assets/lib/kookit-extra-browser.min";
-import {
-  encryptToken,
-  onSyncCallback,
-} from "../../../utils/request/thirdparty";
+import { ConfigService, SyncHelper } from "../../../assets/lib/kookit-extra-browser.min";
+import { encryptToken } from "../../../utils/request/thirdparty";
 import SyncService from "../../../utils/storage/syncService";
-import { updateUserConfig } from "../../../utils/request/user";
+
 import BookUtil from "../../../utils/file/bookUtil";
 import Book from "../../../models/Book";
-import ConfigUtil from "../../../utils/file/configUtil";
+
 import TokenService from "../../../utils/storage/tokenService";
+import { canUseDataSource } from "../../../utils/storage/dataSourcePolicy";
+import { usesIndependentSync, useDirectSyncForIndependentDrive } from "../../../utils/storage/syncPolicy";
 declare var window: any;
 class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
   constructor(props: SettingInfoProps) {
@@ -54,8 +33,6 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       autoOffline: ConfigService.getReaderConfig("autoOffline") === "yes",
       isDisableAutoSync:
         ConfigService.getReaderConfig("isDisableAutoSync") === "yes",
-      isEnableKoodoSync:
-        ConfigService.getReaderConfig("isEnableKoodoSync") === "yes",
       hideSyncProgress:
         ConfigService.getReaderConfig("hideSyncProgress") === "yes",
       driveConfig: {},
@@ -105,29 +82,13 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       );
       return;
     }
-    if (!this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
+    if (!canUseDataSource(targetDrive)) {
+      toast(this.props.t("TODO: Cloud drive authorization is not available yet"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
       return;
     }
-    if (
-      !isElectron &&
-      driveList.find((item) => item.value === targetDrive)?.needExtension
-    ) {
-      if (!(await confirmBrowserExtensionAsync())) {
-        return;
-      }
-    }
-    if (
-      driveList.find((item) => item.value === targetDrive)?.isPro &&
-      !this.props.isAuthed
-    ) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
+
+    if (targetDrive !== "local" && !canUseDataSource(targetDrive)) { toast(this.props.t("TODO: Cloud drive authorization is not available yet")); return; }
     this.props.handleSettingDrive(targetDrive);
     let settingDrive = targetDrive;
     if (settingDrive === "icloud" || settingDrive === "folder") {
@@ -177,45 +138,20 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       ConfigService.setListConfig(settingDrive, "dataSourceList");
       toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
       if (
-        this.props.isAuthed &&
+        canUseDataSource(settingDrive) &&
         !ConfigService.getItem("defaultSyncOption") &&
         settingDrive !== "microsoft_exp"
       ) {
         ConfigService.setItem("defaultSyncOption", settingDrive);
-        if (ConfigService.getReaderConfig("isEnableKoodoSync") === "yes") {
-          resetKoodoSync();
-        }
+        useDirectSyncForIndependentDrive();
+
         this.props.handleFetchDefaultSyncOption();
       }
       this.props.handleFetchDataSourceList();
       this.props.handleSettingDrive("");
       return;
     }
-    if (
-      settingDrive === "dropbox" ||
-      settingDrive === "yandex" ||
-      settingDrive === "dubox" ||
-      settingDrive === "yiyiwu" ||
-      settingDrive === "google" ||
-      settingDrive === "boxnet" ||
-      settingDrive === "pcloud" ||
-      settingDrive === "adrive" ||
-      settingDrive === "microsoft_exp" ||
-      settingDrive === "microsoft"
-    ) {
-      this.handleJump(
-        new SyncUtil(settingDrive, {}).getAuthUrl(
-          getServerRegion() === "china" &&
-            (settingDrive === "microsoft" ||
-              settingDrive === "microsoft_exp" ||
-              settingDrive === "dubox" ||
-              settingDrive === "yiyiwu" ||
-              settingDrive === "adrive")
-            ? KookitConfig.ThirdpartyConfig.cnCallbackUrl
-            : KookitConfig.ThirdpartyConfig.callbackUrl
-        )
-      );
-    }
+
   };
   handleDeleteDataSource = async (event: any) => {
     let targetDrive = event.target.value;
@@ -236,9 +172,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     if (targetDrive === ConfigService.getItem("defaultSyncOption")) {
       ConfigService.removeItem("defaultSyncOption");
       this.props.handleFetchDefaultSyncOption();
-      if (ConfigService.getReaderConfig("isEnableKoodoSync") === "yes") {
-        resetKoodoSync();
-      }
+
     }
     toast.success(this.props.t("Deletion successful"));
   };
@@ -246,32 +180,18 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     if (!newValue) {
       return;
     }
-    if (!this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
+    if (!canUseDataSource(newValue)) {
+      toast(this.props.t("TODO: Cloud drive authorization is not available yet"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
       return;
     }
 
     ConfigService.setItem("defaultSyncOption", newValue);
-    if (ConfigService.getReaderConfig("isEnableKoodoSync") === "yes") {
-      resetKoodoSync();
-    }
+    useDirectSyncForIndependentDrive();
+
     this.props.handleFetchDefaultSyncOption();
     toast.success(this.props.t("Change successful"));
-    if (
-      !(await ConfigUtil.isCloudEmpty()) &&
-      ConfigService.getReaderConfig("isEnableKoodoSync") === "yes"
-    ) {
-      toast(
-        this.props.t(
-          "This data source already contains a library. If you need to merge local and cloud data, please turn off Koodo Sync and resync."
-        ),
-        {
-          duration: 10000,
-        }
-      );
-    }
+
   };
   handleSelectBackupOrRestoreSource = async (
     event: any,
@@ -303,15 +223,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       );
       return;
     }
-    if (
-      driveList.find((item) => item.value === targetDrive)?.isPro &&
-      !this.props.isAuthed
-    ) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
+    if (targetDrive !== "local" && !canUseDataSource(targetDrive)) { toast(this.props.t("TODO: Cloud drive authorization is not available yet")); return; }
     this.setState({
       backupDrive: mode === "backup" ? targetDrive : this.state.backupDrive,
       restoreDrive: mode === "restore" ? targetDrive : this.state.restoreDrive,
@@ -435,6 +347,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     let corsResult = await testCORS(this.state.driveConfig.url);
     if (!corsResult && !isElectron) {
       const extensionInfo = await detectKoodoExtension();
+      if (!extensionInfo.installed) { toast.error(this.props.t("This data source requires a browser extension. Please use the desktop app for now.")); }
       if (extensionInfo.installed) {
         vexComfirmAsync(
           this.props.t(
@@ -482,12 +395,11 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
         toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
       } else {
         toast.error(i18n.t("Binding failed"), { id: "adding-sync-id" });
+        return;
       }
     } else {
-      await onSyncCallback(
-        this.props.settingDrive,
-        this.state.driveConfig.token
-      );
+      toast(this.props.t("TODO: Cloud drive authorization is not available yet"));
+      return;
     }
     SyncService.removeSyncUtil(this.props.settingDrive);
     removeCloudConfig(this.props.settingDrive);
@@ -498,14 +410,12 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       });
     }
     if (
-      this.props.isAuthed &&
-      !ConfigService.getItem("defaultSyncOption") &&
-      this.props.settingDrive !== "microsoft_exp"
+      canUseDataSource(this.props.settingDrive) &&
+      !ConfigService.getItem("defaultSyncOption")
     ) {
       ConfigService.setItem("defaultSyncOption", this.props.settingDrive);
-      if (ConfigService.getReaderConfig("isEnableKoodoSync") === "yes") {
-        resetKoodoSync();
-      }
+      useDirectSyncForIndependentDrive();
+
       this.props.handleFetchDefaultSyncOption();
     }
     this.props.handleFetchDataSourceList();
@@ -514,6 +424,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
 
   renderSwitchOption = (optionList: any[]) => {
     return optionList.map((item) => {
+
       return (
         <div
           style={item.isElectron ? (isElectron ? {} : { display: "none" }) : {}}
@@ -528,26 +439,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
               className="single-control-switch"
               onClick={async () => {
                 switch (item.propName) {
-                  case "isEnableKoodoSync":
-                    this.handleSetting(item.propName);
-                    let encryptToken = await TokenService.getToken(
-                      this.props.defaultSyncOption + "_token"
-                    );
-                    await updateUserConfig({
-                      is_enable_koodo_sync:
-                        ConfigService.getReaderConfig("isEnableKoodoSync"),
-                      default_sync_option: this.props.defaultSyncOption,
-                      default_sync_token: encryptToken || "",
-                    });
-                    let userInfo = await this.props.handleFetchUserInfo();
-                    if (
-                      ConfigService.getReaderConfig("isEnableKoodoSync") ===
-                      "yes"
-                    ) {
-                      this.props.cloudSyncFunc(userInfo);
-                    }
 
-                    break;
                   case "autoOffline":
                     this.handleSetting(item.propName);
                     if (!this.state.autoOffline) {
@@ -564,7 +456,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                         ConfigService,
                         BookUtil
                       );
-                      let timer = await showTaskProgress((_: boolean) => {});
+                      let timer = await showTaskProgress((_: boolean) => { });
                       if (!timer) {
                         return;
                       }
@@ -597,13 +489,13 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                 style={
                   this.state[item.propName]
                     ? {
-                        transform: "translateX(20px)",
-                        transition: "transform 0.5s ease",
-                      }
+                      transform: "translateX(20px)",
+                      transition: "transform 0.5s ease",
+                    }
                     : {
-                        transform: "translateX(0px)",
-                        transition: "transform 0.5s ease",
-                      }
+                      transform: "translateX(0px)",
+                      transition: "transform 0.5s ease",
+                    }
                 }
               ></span>
             </span>
@@ -692,7 +584,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   }}
                 >
                   <span className="account-login-option-label">
-                    {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                    {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                   </span>
                 </div>
               ))}
@@ -708,11 +600,11 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
             }}
           >
             {this.props.settingDrive === "webdav" ||
-            this.props.settingDrive === "docker" ||
-            this.props.settingDrive === "ftp" ||
-            this.props.settingDrive === "sftp" ||
-            this.props.settingDrive === "mega" ||
-            this.props.settingDrive === "s3compatible" ? (
+              this.props.settingDrive === "docker" ||
+              this.props.settingDrive === "ftp" ||
+              this.props.settingDrive === "sftp" ||
+              this.props.settingDrive === "mega" ||
+              this.props.settingDrive === "s3compatible" ? (
               <>
                 {driveInputConfig[this.props.settingDrive].map((item) => {
                   return (
@@ -911,51 +803,40 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   this.props.settingDrive === "adrive" ||
                   this.props.settingDrive === "microsoft_exp" ||
                   this.props.settingDrive === "microsoft") && (
-                  <div
-                    className="voice-add-confirm"
-                    style={{ marginRight: "10px" }}
-                    onClick={async () => {
-                      this.handleJump(
-                        new SyncUtil(this.props.settingDrive, {}).getAuthUrl(
-                          getServerRegion() === "china" &&
-                            (this.props.settingDrive === "microsoft" ||
-                              this.props.settingDrive === "microsoft_exp" ||
-                              this.props.settingDrive === "dubox" ||
-                              this.props.settingDrive === "yiyiwu" ||
-                              this.props.settingDrive === "adrive")
-                            ? KookitConfig.ThirdpartyConfig.cnCallbackUrl
-                            : KookitConfig.ThirdpartyConfig.callbackUrl
-                        )
-                      );
-                    }}
-                  >
-                    <Trans>Authorize</Trans>
-                  </div>
-                )}
+                    <div
+                      className="voice-add-confirm"
+                      style={{ marginRight: "10px" }}
+                      onClick={async () => {
+                        toast(this.props.t("TODO: Cloud drive authorization is not available yet"));
+                      }}
+                    >
+                      <Trans>Authorize</Trans>
+                    </div>
+                  )}
                 {(this.props.settingDrive === "webdav" ||
                   this.props.settingDrive === "docker" ||
                   this.props.settingDrive === "ftp" ||
                   this.props.settingDrive === "sftp" ||
                   this.props.settingDrive === "mega" ||
                   this.props.settingDrive === "s3compatible") && (
-                  <div
-                    className="voice-add-confirm"
-                    style={{ marginRight: "10px" }}
-                    onClick={async () => {
-                      if (this.props.settingDrive === "webdav") {
-                        if (!(await this.checkCorsForDrive())) {
-                          return;
+                    <div
+                      className="voice-add-confirm"
+                      style={{ marginRight: "10px" }}
+                      onClick={async () => {
+                        if (this.props.settingDrive === "webdav") {
+                          if (!(await this.checkCorsForDrive())) {
+                            return;
+                          }
                         }
-                      }
-                      testConnection(
-                        this.props.settingDrive,
-                        this.state.driveConfig
-                      );
-                    }}
-                  >
-                    <Trans>Test</Trans>
-                  </div>
-                )}
+                        testConnection(
+                          this.props.settingDrive,
+                          this.state.driveConfig
+                        );
+                      }}
+                    >
+                      <Trans>Test</Trans>
+                    </div>
+                  )}
                 {(this.props.settingDrive === "webdav" ||
                   this.props.settingDrive === "ftp" ||
                   this.props.settingDrive === "s3compatible" ||
@@ -965,11 +846,11 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                     <div
                       className="voice-add-cancel"
                       style={{ borderWidth: 0, lineHeight: "30px" }}
-                  onClick={() => {
-                    openExternalUrl(
-                      getWebsiteUrl() + getWebsiteLang() + "/add-source"
-                    );
-                  }}
+                      onClick={() => {
+                        openExternalUrl(
+                          FORK_HELP
+                        );
+                      }}
                     >
                       {this.props.t("How to fill out")}
                     </div>
@@ -1065,7 +946,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   key={item.value}
                   className="lang-setting-option"
                 >
-                  {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                  {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                 </option>
               ))}
           </select>
@@ -1089,7 +970,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   key={item.value}
                   className="lang-setting-option"
                 >
-                  {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                  {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                 </option>
               ))}
           </select>
@@ -1124,7 +1005,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   key={item.value}
                   className="lang-setting-option"
                 >
-                  {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                  {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                 </option>
               ))}
           </select>
@@ -1159,14 +1040,14 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                   key={item.value}
                   className="lang-setting-option"
                 >
-                  {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                  {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                 </option>
               ))}
           </select>
         </div>
 
-        {this.props.isAuthed && this.renderSwitchOption(syncSettingList)}
-        {this.props.isAuthed && (
+        {(usesIndependentSync()) && this.renderSwitchOption(syncSettingList)}
+        {(usesIndependentSync()) && (
           <>
             <div className="setting-dialog-new-title">
               <Trans>Scheduled sync interval</Trans>
@@ -1264,7 +1145,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
             <p className="setting-option-subtitle">
               <Trans>
                 {
-                  "Data in other devices is messed up, but the data in this device is normal. You can reset the sync record in this device, delete the KoodoReader/config folder in the data source(Turn off Koodo Sync if necessary), and sync again. This should resolve the issue"
+                  "If this device has the correct library, reset its sync record, remove the KoodoReader/config folder from your storage, and sync again."
                 }
               </Trans>
             </p>
@@ -1273,7 +1154,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                 style={{ textDecoration: "underline" }}
                 onClick={() => {
                   openExternalUrl(
-                    getWebsiteUrl() + getWebsiteLang() + "/use-sync"
+                    FORK_HELP
                   );
                 }}
               >

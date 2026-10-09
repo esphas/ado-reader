@@ -7,7 +7,7 @@ import { stateType } from "../../../store";
 
 const mapStateToProps = (state: stateType) => {
   return {
-    isAuthed: state.manager.isAuthed,
+
   };
 };
 const actionCreator = { handleFetchPlugins };

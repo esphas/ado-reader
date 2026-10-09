@@ -10,8 +10,7 @@ export interface PopupAssistProps {
   htmlBook: any;
   quoteText: string;
   plugins: PluginModel[];
-  isAuthed: boolean;
-  userInfo?: any;
+
   isDockedRight: boolean;
   handleQuoteText: (quoteText: string) => void;
   handleOpenMenu: (isOpenMenu: boolean) => void;

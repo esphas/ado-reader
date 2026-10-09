@@ -35,6 +35,6 @@ export const translate: TranslatePlugin = async (
   if (transRes.status === 200) {
     return transRes.data[0].translations[0].text;
   } else {
-    return "Error happened";
+    throw new Error("Error happened");
   }
 };

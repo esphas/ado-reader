@@ -22,7 +22,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
   const targetLanguage = to || "zh";
 
   if (!token) {
-    return "Missing Caiyun token";
+    throw new Error("Missing Caiyun token");
   }
 
   if (sourceLanguage === targetLanguage) {
@@ -58,12 +58,12 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
       }
 
       if (response.data.message) {
-        return response.data.message;
+        throw new Error(response.data.message);
       }
     }
 
-    return "Error happened";
+    throw new Error("Error happened");
   } catch (error) {
-    return getPluginRequestError(error);
+    throw new Error(getPluginRequestError(error));
   }
 }

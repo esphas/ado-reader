@@ -1,25 +1,16 @@
+import { isIndependentDrive } from "../../../utils/storage/dataSourcePolicy";
 import React from "react";
 import "./importDialog.css";
 import { driveList } from "../../../constants/driveList";
 import { Trans } from "react-i18next";
 import { ImportDialogProps, ImportDialogState } from "./interface";
-import _ from "underscore";
+
 import toast from "react-hot-toast";
 import { isElectron } from "react-device-detect";
 import { getCloudConfig } from "../../../utils/file/common";
 import SyncService from "../../../utils/storage/syncService";
-import {
-  getServerRegion,
-  getStorageLocation,
-  openExternalUrl,
-  openInBrowser,
-  showDownloadProgress,
-  supportedFormats,
-} from "../../../utils/common";
-import {
-  KookitConfig,
-  SyncUtil,
-} from "../../../assets/lib/kookit-extra-browser.min";
+import { getStorageLocation, showDownloadProgress, supportedFormats } from "../../../utils/common";
+
 import { GooglePickerUtil } from "../../../utils/file/googlePicker";
 declare var window: any;
 type FileInfo = {
@@ -63,15 +54,7 @@ class ImportDialog extends React.Component<
       this.props.handleSettingMode("sync");
       return;
     }
-    if (
-      driveList.find((item) => item.value === event.target.value)?.isPro &&
-      !this.props.isAuthed
-    ) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
+    if (!isIndependentDrive(event.target.value)) { toast(this.props.t("TODO: Cloud drive authorization is not available yet")); return; }
     if (event.target.value === "add") {
       toast(
         this.props.t(
@@ -130,8 +113,8 @@ class ImportDialog extends React.Component<
     if (!isSupported) {
       toast.error(
         this.props.t("Unsupported file format") +
-          ": " +
-          item.name.split(".").pop()
+        ": " +
+        item.name.split(".").pop()
       );
       return;
     }
@@ -232,8 +215,8 @@ class ImportDialog extends React.Component<
       toast.dismiss("scanning");
       toast.error(
         "Error scanning folder" +
-          ": " +
-          (error instanceof Error ? error.message : String(error))
+        ": " +
+        (error instanceof Error ? error.message : String(error))
       );
       console.error("Error scanning folder:", error);
     }
@@ -278,7 +261,7 @@ class ImportDialog extends React.Component<
     } catch (error) {
       toast.error(
         "Error listing files in folder: " +
-          (error instanceof Error ? error.message : String(error))
+        (error instanceof Error ? error.message : String(error))
       );
       console.error("Error listing files in folder:", error);
     }
@@ -304,22 +287,7 @@ class ImportDialog extends React.Component<
       });
       toast.dismiss("google-picker");
 
-      if (isElectron) {
-        openExternalUrl(
-          "https://dl.koodoreader.com/websites/google-picker.html?access_token=" +
-            pickerUtil.remote.config.access_token
-        );
-        const ipcRenderer = window.electronAPI;
-        ipcRenderer.once("picker-finished", async (config: any) => {
-          if (config && config.action === "picked" && config.docs) {
-            for (const file of config.docs) {
-              await this.handleImportGoogleFile(file);
-            }
-          }
-        });
-      } else {
-        await this.googlePickerUtil.createPicker(this.handlePickerCallback);
-      }
+      toast(this.props.t("TODO: Cloud drive authorization is not available yet"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
       console.error("Error creating Google Picker:", error);
@@ -368,7 +336,7 @@ class ImportDialog extends React.Component<
     } catch (error) {
       toast.error(
         "Error importing Google file: " +
-          (error instanceof Error ? error.message : String(error)),
+        (error instanceof Error ? error.message : String(error)),
         {
           id: "google-download-" + googleFile.id,
         }
@@ -400,47 +368,14 @@ class ImportDialog extends React.Component<
                     key={item.value}
                     className={`cloud-drive-item `}
                     onClick={() => {
-                      if (item.isPro && !this.props.isAuthed) {
-                        toast(
-                          this.props.t(
-                            "Please upgrade to Pro to use this feature"
-                          )
-                        );
-                        this.props.handleSetting(true);
-                        this.props.handleSettingMode("account");
-                        return;
-                      }
+                      if (!isIndependentDrive(item.value)) { toast(this.props.t("TODO: Cloud drive authorization is not available yet")); return; }
 
                       if (!this.props.dataSourceList.includes(item.value)) {
                         this.props.handleSetting(true);
                         this.props.handleSettingMode("sync");
                         this.props.handleSettingDrive(item.value);
                         let settingDrive = item.value;
-                        if (
-                          settingDrive === "dropbox" ||
-                          settingDrive === "yandex" ||
-                          settingDrive === "yiyiwu" ||
-                          settingDrive === "dubox" ||
-                          settingDrive === "google" ||
-                          settingDrive === "boxnet" ||
-                          settingDrive === "pcloud" ||
-                          settingDrive === "adrive" ||
-                          settingDrive === "microsoft_exp" ||
-                          settingDrive === "microsoft"
-                        ) {
-                          openInBrowser(
-                            new SyncUtil(settingDrive, {}).getAuthUrl(
-                              getServerRegion() === "china" &&
-                                (settingDrive === "microsoft" ||
-                                  settingDrive === "microsoft_exp" ||
-                                  settingDrive === "dubox" ||
-                                  settingDrive === "yiyiwu" ||
-                                  settingDrive === "adrive")
-                                ? KookitConfig.ThirdpartyConfig.cnCallbackUrl
-                                : KookitConfig.ThirdpartyConfig.callbackUrl
-                            )
-                          );
-                        }
+
                         return;
                       }
                       if (item.value === "google") {
@@ -456,7 +391,7 @@ class ImportDialog extends React.Component<
                     }}
                   >
                     <span className="cloud-drive-label">
-                      {this.props.t(item.label) + (item.isPro ? " (Pro)" : "")}
+                      {this.props.t(item.label) + (item.isPro ? " (TODO)" : "")}
                     </span>
                     <span className="icon-dropdown import-dialog-more-file"></span>
                   </div>
@@ -508,8 +443,8 @@ class ImportDialog extends React.Component<
                     }}
                   ></span>
                 ) : this.state.selectedFileList
-                    .map((item) => item.path)
-                    .includes(this.state.currentPath + "/" + item.name) ? (
+                  .map((item) => item.path)
+                  .includes(this.state.currentPath + "/" + item.name) ? (
                   <span
                     className="icon-check import-dialog-check-file"
                     style={{ fontWeight: "bold" }}

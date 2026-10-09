@@ -4,7 +4,7 @@ import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
 import GeneralSetting from "../../../containers/settings/generalSetting";
 import SyncSetting from "../../../containers/settings/syncSetting";
-import AccountSetting from "../../../containers/settings/accountSetting";
+
 import PluginSetting from "../../../containers/settings/pluginSetting";
 import ReadingSetting from "../../../containers/settings/readingSetting";
 import AppearanceSetting from "../../../containers/settings/appearanceSetting";
@@ -78,8 +78,6 @@ class SettingDialog extends React.Component<
         return "Plugins";
       case "sync":
         return "Sync and backup";
-      case "account":
-        return "Account";
       case "about":
         return "About";
       case "ai":
@@ -112,7 +110,7 @@ class SettingDialog extends React.Component<
 
           {/* 第一组 */}
           <div className="setting-dialog-sidebar-group">
-            {this.renderSidebarItem("account", "icon-user", "Account", "18px")}
+
             {this.renderSidebarItem("general", "icon-setting", "General", "")}
             {this.renderSidebarItem("data", "icon-archive", "Data", "15px")}
             {this.renderSidebarItem(
@@ -216,8 +214,7 @@ class SettingDialog extends React.Component<
               <AppearanceSetting />
             ) : this.props.settingMode === "sync" ? (
               <SyncSetting />
-            ) : this.props.settingMode === "account" ? (
-              <AccountSetting />
+
             ) : this.props.settingMode === "data" ? (
               <DataSetting />
             ) : this.props.settingMode === "about" ? (

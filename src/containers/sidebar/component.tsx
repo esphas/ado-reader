@@ -4,7 +4,7 @@ import { sideMenu } from "../../constants/sideMenu";
 import { SidebarProps, SidebarState } from "./interface";
 import { withRouter } from "react-router-dom";
 import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
-import { getWebsiteUrl, openInBrowser } from "../../utils/common";
+import { openInBrowser } from "../../utils/common";
 import { Trans } from "react-i18next";
 import toast from "react-hot-toast";
 import {
@@ -385,29 +385,7 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
             <span className="icon-menu sidebar-list"></span>
           </div>
 
-          <img
-            src={
-              ConfigService.getReaderConfig("appSkin") === "night" ||
-              (ConfigService.getReaderConfig("appSkin") === "system" &&
-                ConfigService.getReaderConfig("isOSNight") === "yes")
-                ? require(
-                    `../../assets/images/logo-dark${
-                      this.props.isAuthed ? "-pro" : ""
-                    }.png`
-                  )
-                : require(
-                    `../../assets/images/logo-light${
-                      this.props.isAuthed ? "-pro" : ""
-                    }.png`
-                  )
-            }
-            alt=""
-            onClick={() => {
-              this.handleJump(getWebsiteUrl());
-            }}
-            style={this.state.isCollapsed ? { display: "none" } : {}}
-            className="logo"
-          />
+          <div className="logo" style={{fontSize: "21px", fontWeight: "bold", top: "30px", display: this.state.isCollapsed ? "none" : "block"}}>Ado Reader</div>
           <div
             className="side-menu-container-parent"
             style={this.state.isCollapsed ? { width: "70px" } : {}}

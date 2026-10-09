@@ -1,22 +1,6 @@
 import { connect } from "react-redux";
 import { withTranslation } from "react-i18next";
-import {
-  handleSortDisplay,
-  handleSetting,
-  handleSettingMode,
-  handleAbout,
-  handleLocalFileDialog,
-  handleFetchBooks,
-  handleFetchNotes,
-  handleFetchAuthed,
-  handleFetchBookmarks,
-  handleFetchDefaultSyncOption,
-  handleFetchLoginOptionList,
-  handleFetchDataSourceList,
-  handleCloudSyncFunc,
-  handleFetchUserInfo,
-  handleReadingBook,
-} from "../../store/actions";
+import { handleSortDisplay, handleSetting, handleSettingMode, handleAbout, handleLocalFileDialog, handleFetchBooks, handleFetchNotes, handleFetchBookmarks, handleFetchDefaultSyncOption, handleFetchDataSourceList, handleCloudSyncFunc, handleReadingBook } from "../../store/actions";
 import { stateType } from "../../store";
 import Header from "./component";
 import { withRouter } from "react-router-dom";
@@ -27,12 +11,11 @@ const mapStateToProps = (state: stateType) => {
     isAboutOpen: state.manager.isAboutOpen,
 
     isCollapsed: state.sidebar.isCollapsed,
-    isNewWarning: state.manager.isNewWarning,
     currentBook: state.book.currentBook,
     mode: state.sidebar.mode,
-    isAuthed: state.manager.isAuthed,
+
     defaultSyncOption: state.backupPage.defaultSyncOption,
-    userInfo: state.manager.userInfo,
+
     isLoadMore: state.manager.isLoadMore,
     isSortDisplay: state.manager.isSortDisplay,
     bookSortCode: state.manager.bookSortCode,
@@ -48,12 +31,12 @@ const actionCreator = {
   handleFetchBooks,
   handleFetchNotes,
   handleFetchBookmarks,
-  handleFetchAuthed,
+
   handleFetchDefaultSyncOption,
-  handleFetchLoginOptionList,
+
   handleFetchDataSourceList,
   handleCloudSyncFunc,
-  handleFetchUserInfo,
+
   handleReadingBook,
 };
 export default connect(

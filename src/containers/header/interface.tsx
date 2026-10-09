@@ -5,13 +5,12 @@ export interface HeaderProps extends RouteComponentProps<any> {
   isSortDisplay: boolean;
   isAboutOpen: boolean;
   isCollapsed: boolean;
-  isNewWarning: boolean;
   isLoadMore: boolean;
-  isAuthed: boolean;
+
   currentBook: Book;
   defaultSyncOption: string;
   mode: string;
-  userInfo: any;
+
   bookSortCode: { sort: number; order: number };
   importBookFunc: (file: any) => Promise<void>;
   handleSortDisplay: (isSortDisplay: boolean) => void;
@@ -19,12 +18,12 @@ export interface HeaderProps extends RouteComponentProps<any> {
   handleAbout: (isAboutOpen: boolean) => void;
   handleLocalFileDialog: (isOpenLocalFileDialog: boolean) => void;
   handleImportDialog: (isOpenImportDialog: boolean) => void;
-  handleFetchAuthed: () => void;
+
   handleSearchResults: (results: number[]) => void;
-  handleFetchUserInfo: () => Promise<any>;
+
   handleSettingMode: (settingMode: string) => void;
   handleFetchDefaultSyncOption: () => void;
-  handleFetchLoginOptionList: () => void;
+
   handleFetchDataSourceList: () => void;
   handleDrag: (isDrag: boolean) => void;
   handleFetchBooks: () => void;
@@ -41,8 +40,7 @@ export interface HeaderState {
   isOnlyLocal: boolean;
   language: string;
   width: number;
-  isNewVersion: boolean;
-  isHidePro: boolean;
+
   isSync: boolean;
-  notificationCount: number;
+
 }

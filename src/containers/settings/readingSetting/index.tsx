@@ -11,7 +11,7 @@ import { withRouter } from "react-router-dom";
 
 const mapStateToProps = (state: stateType) => {
   return {
-    isAuthed: state.manager.isAuthed,
+
   };
 };
 const actionCreator = {

@@ -45,12 +45,8 @@ export type stateType = {
     isAboutOpen: boolean;
     isShowLoading: boolean;
     isShowPopupNote: boolean;
-    isShowSupport: boolean;
+
     isLoadMore: boolean;
-    isShowNew: boolean;
-    userInfo: any;
-    isAuthed: boolean;
-    isNewWarning: boolean;
     isSelectBook: boolean;
     selectedBooks: string[];
     settingMode: string;
@@ -84,7 +80,6 @@ export type stateType = {
     popupOptionUpdateIndex: number;
     isOpenTokenDialog: boolean;
     dataSourceList: string[];
-    loginOptionList: { email: string; provider: string }[];
     defaultSyncOption: string;
   };
   progressPanel: {

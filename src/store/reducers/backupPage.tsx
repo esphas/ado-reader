@@ -9,7 +9,6 @@ const initState = {
   isOpenPopupOptionDialog: false,
   popupOptionUpdateIndex: 0,
   dataSourceList: [],
-  loginOptionList: [],
   defaultSyncOption: "",
 };
 export function backupPage(
@@ -62,11 +61,7 @@ export function backupPage(
         ...state,
         isOpenTokenDialog: action.payload,
       };
-    case "HANDLE_LOGIN_OPTION":
-      return {
-        ...state,
-        loginOptionList: action.payload,
-      };
+
     case "SET_DATA_SOURCE":
       return {
         ...state,
