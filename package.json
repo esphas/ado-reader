@@ -146,7 +146,7 @@
     "protocols": {
       "name": "AdoReader",
       "schemes": [
-        "ado-reader"
+        "koodo-reader"
       ]
     },
     "directories": {

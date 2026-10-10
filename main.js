@@ -212,7 +212,7 @@ if (process.platform != "darwin" && process.argv.length >= 2) {
   filePath = process.argv[1];
   // Check argv for a deep link URL (cold start)
   for (const arg of process.argv) {
-    if (arg.startsWith("ado-reader://")) {
+    if (arg.startsWith("koodo-reader://")) {
       pendingDeepLink = arg;
       break;
     }
@@ -261,7 +261,7 @@ if (!singleInstance) {
       mainWin.focus();
     }
     // Handle deep link passed via second-instance argv
-    const deepLink = argv.find((arg) => arg.startsWith("ado-reader://"));
+    const deepLink = argv.find((arg) => arg.startsWith("koodo-reader://"));
     if (deepLink) {
       if (deepLink === pendingDeepLink) {
         pendingDeepLink = null;
@@ -1987,7 +1987,7 @@ app.on("open-file", (e, pathToFile) => {
   filePath = pathToFile;
 });
 // Register protocol handler
-app.setAsDefaultProtocolClient("ado-reader");
+app.setAsDefaultProtocolClient("koodo-reader");
 // Handle MacOS deep linking
 app.on("open-url", (event, url) => {
   event.preventDefault();
@@ -1998,7 +1998,7 @@ var lastDeepLinkAt = 0;
 const handleCallback = (url) => {
   try {
     // 检查 URL 是否有效
-    if (!url.startsWith("ado-reader://")) {
+    if (!url.startsWith("koodo-reader://")) {
       console.error("Invalid URL format:", url);
       return;
     }
