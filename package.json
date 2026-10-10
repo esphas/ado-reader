@@ -286,6 +286,7 @@
     "linux": {
       "icon": "assets/icons",
       "category": "Office",
+      "maintainer": "Ado Reader contributors <esphas@users.noreply.github.com>",
       "target": [
         {
           "target": "deb",
