@@ -1,6 +1,10 @@
 name: Build/release
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write

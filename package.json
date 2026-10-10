@@ -1,7 +1,7 @@
 {
   "name": "ado-reader",
   "main": "main.js",
-  "version": "2.4.6",
+  "version": "2.4.6-ado.1",
   "description": "Ado Reader is a free, independent fork of Koodo Reader",
   "author": {
     "name": "Ado Reader contributors"
