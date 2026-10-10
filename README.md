@@ -44,12 +44,12 @@ Make sure that you have installed yarn and git
 
 1. Download, Test & Build
 
-  ```
-  yarn install --frozen-lockfile
-  yarn typecheck
-  yarn build
-  yarn test --watchAll=false --runInBand
-  ```
+    ```
+    yarn install --frozen-lockfile
+    yarn typecheck
+    yarn build
+    yarn test --watchAll=false --runInBand
+    ```
 
 2. Enter desktop mode
 
@@ -65,6 +65,6 @@ Make sure that you have installed yarn and git
 
 4. Package
 
-  ```
-  yarn electron-builder --win --x64 --dir --publish never
-  ```
+    ```
+    yarn electron-builder --win --x64 --dir --publish never
+    ```
