@@ -1,17 +1,10 @@
-<div align="left">
-
-</div>
-
 <h1 align="center">
   Ado Reader
 </h1>
 
 <h3 align="center">
-  A fork of the cross-platform ebook reader [Koodo Reader](https://github.com/koodo-reader/koodo-reader)
+  A fork of the cross-platform ebook reader <a href="https://github.com/koodo-reader/koodo-reader">Koodo Reader</a>
 </h3>
-<div align="center">
-
-</div>
 
 ## Features
 
