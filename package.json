@@ -155,7 +155,8 @@
     "publish": {
       "provider": "github",
       "repo": "ado-reader",
-      "owner": "esphas"
+      "owner": "esphas",
+      "releaseType": "release"
     },
     "buildDependenciesFromSource": false,
     "nodeGypRebuild": false,
