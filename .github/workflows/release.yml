@@ -2,12 +2,12 @@ name: Build/release
 
 on: workflow_dispatch
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
-
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
 
     # Platforms to build on/for
     strategy:
@@ -29,10 +29,6 @@ jobs:
       - name: TypeScript type check
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
-        # Only install Snapcraft on Ubuntu
-        if: startsWith(matrix.os, 'ubuntu-22.04')
       - name: Install Gcc
         if: startsWith(matrix.os, 'ubuntu-22.04')
         run: |
@@ -78,10 +74,6 @@ jobs:
           # GitHub token, automatically provided to the action
           # (No need to define this secret in the repo settings)
           github_token: ${{ secrets.github_token }}
-
-          # macOS code signing certificate
-          mac_certs: ${{ secrets.MAC_CERTS }}
-          mac_certs_password: ${{ secrets.MAC_CERTS_PASSWORD }}
 
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
